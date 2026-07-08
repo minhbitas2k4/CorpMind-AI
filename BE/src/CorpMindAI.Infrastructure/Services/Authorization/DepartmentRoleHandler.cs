@@ -21,11 +21,10 @@ namespace CorpMindAI.Infrastructure.Services.Authorization
 
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, DepartmentRoleRequirement requirement)
         {
-            // 1. Trích xuất HttpContext từ context.Resource trước, fallback qua HttpContextAccessor
+            // Trích xuất HttpContext từ context.Resource trước, fallback qua HttpContextAccessor
             var httpContext = context.Resource as HttpContext ?? _httpContextAccessor.HttpContext;
             if (httpContext == null) return Task.CompletedTask;
 
-            // Tìm kiếm 'department_id' hoặc 'departmentId' từ Route data hoặc Query string
             var routeData = httpContext.GetRouteData();
             var deptIdStr = routeData.Values["department_id"]?.ToString()
                             ?? routeData.Values["departmentId"]?.ToString()
@@ -33,21 +32,19 @@ namespace CorpMindAI.Infrastructure.Services.Authorization
 
             if (string.IsNullOrEmpty(deptIdStr) || !int.TryParse(deptIdStr, out int targetDepartmentId))
             {
-                // Nếu API không yêu cầu cụ thể departmentId, dừng xử lý
                 return Task.CompletedTask;
             }
 
-            // 2. Lấy ra danh sách các Claim "DepartmentRole" từ JWT
             var userDeptRoleClaims = context.User.FindAll("DepartmentRole").Select(c => c.Value);
 
-            // 3. So khớp cấu trúc Claim dạng: "{AllowedRole}:{TargetDepartmentId}"
+            // So khớp cấu trúc Claim dạng: "{AllowedRole}:{TargetDepartmentId}"
             foreach (var allowedRole in requirement.AllowedRoles)
             {
                 string expectedClaimValue = $"{allowedRole}:{targetDepartmentId}";
 
                 if (userDeptRoleClaims.Contains(expectedClaimValue))
                 {
-                    context.Succeed(requirement); // Xác thực thành công
+                    context.Succeed(requirement); 
                     return Task.CompletedTask;
                 }
             }

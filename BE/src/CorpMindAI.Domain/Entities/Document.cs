@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,20 +17,29 @@ namespace CorpMindAI.Domain.Entities
 
         [Required]
         [MaxLength(255)]
+        [Column("original_file_name")]
+        public string OriginalFileName { get; set; } = null!;
+
+        [Required]
+        [MaxLength(255)]
         [Column("title")]
         public string Title { get; set; } = null!;
 
         [Required]
         [MaxLength(512)]
+        [Column("storage_key")]
+        public string StorageKey { get; set; } = null!;
+
+        [MaxLength(512)]
         [Column("file_path")]
-        public string FilePath { get; set; } = null!;
+        public string? FilePath { get; set; }
 
         [MaxLength(50)]
         [Column("file_type")]
         public string? FileType { get; set; }
 
         [Column("file_size")]
-        public int? FileSize { get; set; }
+        public long? FileSize { get; set; }
 
         [Column("uploaded_by")]
         public int? UploadedById { get; set; }
@@ -47,7 +56,7 @@ namespace CorpMindAI.Domain.Entities
         [Required]
         [MaxLength(20)]
         [Column("status")]
-        public string Status { get; set; } = "pending";
+        public string Status { get; set; } = "uploaded";
 
         [Column("approved_by")]
         public int? ApprovedById { get; set; }
@@ -79,7 +88,6 @@ namespace CorpMindAI.Domain.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Phục vụ mối quan hệ tự tham chiếu kép với bảng xung đột
         public virtual ICollection<AiKnowledgeConflict> SourceConflicts { get; set; } = new List<AiKnowledgeConflict>();
         public virtual ICollection<AiKnowledgeConflict> ConflictingConflicts { get; set; } = new List<AiKnowledgeConflict>();
     }

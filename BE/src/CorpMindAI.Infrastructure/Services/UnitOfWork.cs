@@ -14,11 +14,16 @@ namespace CorpMindAI.Infrastructure.Services
     {
         private readonly CorpMindDbContext _context;
         public IUserRepository UserRepo { get; }
+        public IDocumentRepository DocumentRepo { get; }
 
-        public UnitOfWork(IUserRepository users, CorpMindDbContext context)
+        public UnitOfWork(
+            IUserRepository users,
+            IDocumentRepository documents,
+            CorpMindDbContext context)
         {
             _context = context;
             UserRepo = users;
+            DocumentRepo = documents;
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -499,3 +499,9 @@ dist/
 !.env.example
 npm-debug.log*
 yarn-debug.log*
+
+# Uploaded files
+src/CorpMindAI/uploads/
+
+# Hoặc nếu muốn ignore mọi thư mục uploads trong solution
+**/uploads/

@@ -19,7 +19,6 @@ namespace CorpMindAI.Infrastructure.Extentions
         {
             services.AddHttpContextAccessor();
             
-            // Xử lý Captive Dependency: Đăng ký Authorization Handler là Scoped 
             services.AddScoped<IAuthorizationHandler, DepartmentRoleHandler>();
 
             var jwtSettings = configuration.GetSection("JwtSettings");
@@ -38,7 +37,7 @@ namespace CorpMindAI.Infrastructure.Extentions
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true, // Bắt buộc kiểm tra chữ ký mã hóa của Token
+                    ValidateIssuerSigningKey = true, 
                     ValidIssuer = jwtSettings["Issuer"],
                     ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
@@ -49,13 +48,16 @@ namespace CorpMindAI.Infrastructure.Extentions
             // Cấu hình Authorization Policies 
             services.AddAuthorization(options =>
             {
-                // 1. Quyền quản lý tài liệu phòng ban (Yêu cầu role knowledge_manager hoặc system_admin)
+                // Quyền quản lý tài liệu phòng ban 
                 options.AddPolicy("CanManageDepartmentDocument", policy =>
                     policy.Requirements.Add(new DepartmentRoleRequirement("knowledge_manager", "system_admin")));
 
-                // 2. Quyền đóng góp, tải lên tài liệu (Yêu cầu contributor hoặc manager phòng ban đó)
+                
                 options.AddPolicy("CanContributeKnowledge", policy =>
                     policy.Requirements.Add(new DepartmentRoleRequirement("knowledge_contributor", "knowledge_manager", "system_admin")));
+                // Quyền đóng góp, tải lên tài liệu 
+                options.AddPolicy("CanContributeAndManagerKnowledge", policy =>
+                    policy.Requirements.Add(new DepartmentRoleRequirement("knowledge_contributor", "knowledge_manager")));
             });
 
             return services;

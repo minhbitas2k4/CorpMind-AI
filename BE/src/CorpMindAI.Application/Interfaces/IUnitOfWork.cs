@@ -10,7 +10,8 @@ namespace CorpMindAI.Application.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         // Quản lý các Repository
-        IUserRepository UserRepo {  get; }
+        IUserRepository UserRepo { get; }
+        IDocumentRepository DocumentRepo { get; }
 
         // Hàm quyết định việc lưu dữ liệu xuống DB
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

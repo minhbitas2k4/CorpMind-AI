@@ -1,6 +1,7 @@
 using CorpMindAI.Api;
 using CorpMindAI.Infrastructure.Extentions;
 using CorpMindAI.Infrastructure.Services;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Cấu hình giới hạn kích thước multipart/form-data (200MB tổng request)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 209_715_200; 
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
 
 // Đăng ký toàn bộ Dependency Injection đồng bộ của Application và Infrastructure
 builder.Services.AddAppDI(builder.Configuration);
@@ -60,13 +69,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-//using (var scope = app.Services.CreateScope())
-//{
-//    var migrationService =
-//        scope.ServiceProvider.GetRequiredService<PasswordMigrationService>();
-
-//    await migrationService.MigratePasswordsAsync();
-//}
 
 app.Run();

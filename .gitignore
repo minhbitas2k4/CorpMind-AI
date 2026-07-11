@@ -505,3 +505,27 @@ src/CorpMindAI/uploads/
 
 # Hoặc nếu muốn ignore mọi thư mục uploads trong solution
 **/uploads/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# VS Code
+.vscode/
+
+# Generated images
+output/
+temp/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db

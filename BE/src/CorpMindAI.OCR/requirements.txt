@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+Pillow
+PyMuPDF
+pydantic
+python-multipart
+deskew
+paddleocr
+paddlepaddle

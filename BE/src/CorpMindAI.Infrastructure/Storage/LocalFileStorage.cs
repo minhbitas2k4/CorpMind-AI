@@ -47,6 +47,11 @@ namespace CorpMindAI.Infrastructure.Storage
             return Path.Combine(GetPhysicalBasePath(), relativePath);
         }
 
+        public string GetPhysicalPath(string storageKey)
+        {
+            return StorageKeyToPhysicalPath(storageKey);
+        }
+
         public async Task<string> UploadAsync(
             Stream fileStream,
             string originalFileName,

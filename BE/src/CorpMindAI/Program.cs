@@ -1,6 +1,9 @@
 using CorpMindAI.Api;
+using CorpMindAI.Infrastructure.Authorization;
 using CorpMindAI.Infrastructure.Extentions;
 using CorpMindAI.Infrastructure.Services;
+using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.OpenApi.Models;
 
@@ -13,7 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 // Cấu hình giới hạn kích thước multipart/form-data (200MB tổng request)
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 209_715_200; 
+    options.MultipartBodyLengthLimit = 209_715_200;
     options.ValueLengthLimit = int.MaxValue;
     options.MultipartHeadersLengthLimit = int.MaxValue;
 });
@@ -23,6 +26,10 @@ builder.Services.AddAppDI(builder.Configuration);
 
 // Cấu hình Authentication & Custom Authorization Policies (Sử dụng Scoped Handler và Validation Parameters bảo mật)
 builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Cấu hình Hangfire — bao gồm storage PostgreSQL và background server
+builder.Services.AddConfigureHangfire(builder.Configuration)
+                .AddHangfireServerWithConfig(builder.Configuration);
 
 // Cấu hình Swagger kèm JWT authorize
 builder.Services.AddSwaggerGen(c =>
@@ -66,6 +73,17 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+// Chỉ user có role "knowledge_manager" mới truy cập được dashboard.
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    // Sử dụng HangfireSimpleAuthFilter — kiểm tra IsAuthenticated + role "knowledge_manager"
+    Authorization = new[]
+    {
+        new HangfireSimpleAuthFilter()
+    }
+});
+
 app.UseAuthorization();
 
 app.MapControllers();

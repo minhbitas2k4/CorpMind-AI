@@ -15,5 +15,7 @@ namespace CorpMindAI.Application.Interfaces
         Task DeleteAsync(
             string storageKey,
             CancellationToken cancellationToken = default);
+
+        string GetPhysicalPath(string storageKey);
     }
 }

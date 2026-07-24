@@ -20,6 +20,7 @@ namespace CorpMindAI.Infrastructure.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Curriculum> Curriculums { get; set; }
         public DbSet<Document> Documents { get; set; }
+        public DbSet<OcrResult> OcrResults { get; set; }
         public DbSet<ChatSession> ChatSessions { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<AiKnowledgeConflict> AiKnowledgeConflicts { get; set; }
@@ -59,6 +60,16 @@ namespace CorpMindAI.Infrastructure.Data
                 .WithMany(u => u.ApprovedDocuments)
                 .HasForeignKey(d => d.ApprovedById)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<OcrResult>()
+                .HasOne(o => o.Document)
+                .WithOne(d => d.OcrResult)
+                .HasForeignKey<OcrResult>(o => o.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OcrResult>()
+                .HasIndex(o => o.DocumentId)
+                .IsUnique();
         }
     }
 }

@@ -9,11 +9,6 @@ using Microsoft.Extensions.Options;
 
 namespace CorpMindAI.Application.Usecase.Document.Command
 {
-    /// - Chỉ phụ thuộc vào IFileStorage và IUnitOfWork (interface)
-    /// - Partial success: mỗi file xử lý độc lập, lỗi 1 file không hủy toàn bộ request.
-    /// - Streaming: dùng OpenReadStream() — không đọc toàn bộ file vào RAM.
-    /// - Lưu batch: AddRangeAsync + SaveChanges một lần sau khi tất cả file thành công.
-    /// - Không hard-code giới hạn — đọc từ UploadSettings.
     public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentCommand, UploadDocumentResponseDto>
     {
         private readonly IFileStorage _fileStorage;

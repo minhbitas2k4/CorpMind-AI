@@ -10,10 +10,16 @@ namespace CorpMindAI.Application.Interfaces
 
         Task<Document?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
+        Task<Document?> GetByIdWithOcrResultAsync(int id, CancellationToken cancellationToken = default);
+
         Task<IReadOnlyList<Document>> GetByDepartmentAsync(
             int departmentId,
             int page = 1,
             int pageSize = 20,
             CancellationToken cancellationToken = default);
+
+        Task AddOcrResultAsync(OcrResult ocrResult, CancellationToken cancellationToken = default);
+
+        Task<OcrResult?> GetOcrResultByDocumentIdAsync(int documentId, CancellationToken cancellationToken = default);
     }
 }

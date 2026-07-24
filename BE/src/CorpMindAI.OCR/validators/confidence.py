@@ -1,5 +1,3 @@
-# validators/confidence.py
-
 def get_confidence_level(score: float) -> str:
     """
     Phân loại một điểm confidence (0.0 - 1.0) thành mức độ tin cậy.
@@ -24,14 +22,15 @@ def evaluate(response):
 def evaluate_components(response):
     """
     Đánh giá độ tin cậy CHI TIẾT theo từng component (title, text, table...),
-    trả về danh sách dict để dễ hiển thị / debug / báo cáo.
+    trả về danh sách dict để dễ serialize thành JSON qua API.
     """
     results = []
     for component in response.components:
         results.append({
-            "component_type": component.component_type,
+            "component_type": component.component_type.value,  # enum -> string
             "average_confidence": component.average_confidence,
             "level": get_confidence_level(component.average_confidence),
             "raw_text": component.raw_text,
+            "bbox": component.bbox,
         })
     return results

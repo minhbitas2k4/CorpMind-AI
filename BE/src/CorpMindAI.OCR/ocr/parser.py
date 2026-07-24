@@ -133,7 +133,8 @@ def parse_structure_result(raw_regions: list[dict]) -> StructureResponse:
             table_html = None
 
         raw_text = " ".join(b.text for b in blocks)
-        all_confidences.append(avg_conf)
+        if raw_text.strip():
+            all_confidences.append(avg_conf)
 
         components.append(
             LayoutComponent(

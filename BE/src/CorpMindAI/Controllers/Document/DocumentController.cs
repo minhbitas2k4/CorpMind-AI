@@ -1,4 +1,6 @@
+using CorpMindAI.Application.DTOs.Common;
 using CorpMindAI.Application.Usecase.Document.Command;
+using CorpMindAI.Application.Usecase.Document.Query;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +12,15 @@ namespace CorpMindAI.Api.Controllers.Document
 {
     [Route("api/departments/{department_id:int}/documents")]
     [ApiController]
-    [Authorize] 
+    [Authorize]
     public class DocumentController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly UploadSettings _uploadSettings;
 
-        public DocumentController(IMediator mediator, IOptions<UploadSettings> uploadSettings)
+        public DocumentController(
+            IMediator mediator,
+            IOptions<UploadSettings> uploadSettings)
         {
             _mediator = mediator;
             _uploadSettings = uploadSettings.Value;
@@ -25,7 +29,7 @@ namespace CorpMindAI.Api.Controllers.Document
         // Authorization: Chỉ knowledge_contributor, knowledge_manager của phòng ban có department_id tương ứng mới được phép.
         [HttpPost("upload")]
         [Authorize(Policy = "CanContributeAndManagerKnowledge")]
-        [RequestSizeLimit(209_715_200)] 
+        [RequestSizeLimit(209_715_200)]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadDocuments(
             [FromRoute] int department_id,
@@ -59,9 +63,65 @@ namespace CorpMindAI.Api.Controllers.Document
                 return BadRequest(result);
 
             if (result.FailedCount > 0)
-                return StatusCode(207, result); 
+                return StatusCode(207, result);
 
             return Ok(result);
+        }
+
+        
+        // Trả về 202 Accepted với thông tin job đã được enqueue.
+        [HttpPost("{document_id:int}/ocr")]
+        [Authorize(Policy = "CanContributeAndManagerKnowledge")]
+        public async Task<IActionResult> ProcessOcr(
+            [FromRoute] int department_id,
+            [FromRoute] int document_id,
+            CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                              ?? User.FindFirstValue("sub");
+
+            if (userIdClaim is null || !int.TryParse(userIdClaim, out int currentUserId))
+                return Unauthorized(new { message = "Không thể xác định danh tính người dùng từ token." });
+
+            // Gửi ProcessOcrCommand — handler sẽ validate + enqueue Hangfire job
+            var command = new ProcessOcrCommand(document_id, currentUserId);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+
+            return Accepted(new
+            {
+                message = result.Message,
+                data = result.Data,
+            });
+        }
+
+        // Kiểm tra trạng thái OCR hiện tại của document.
+        [HttpGet("{document_id:int}/ocr-status")]
+        [Authorize(Policy = "CanContributeAndManagerKnowledge")]
+        public async Task<IActionResult> GetOcrStatus(
+            [FromRoute] int department_id,
+            [FromRoute] int document_id,
+            CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                              ?? User.FindFirstValue("sub");
+
+            if (userIdClaim is null || !int.TryParse(userIdClaim, out int currentUserId))
+                return Unauthorized(new { message = "Không thể xác định danh tính người dùng từ token." });
+
+            var query = new GetOcrStatusQuery(document_id, currentUserId);
+            var result = await _mediator.Send(query, cancellationToken);
+
+            if (!result.Success)
+                return NotFound(new { message = result.Message });
+
+            return Ok(new
+            {
+                message = "Lấy trạng thái OCR thành công.",
+                data = result.Data,
+            });
         }
     }
 }

@@ -33,6 +33,14 @@ namespace CorpMindAI.Infrastructure.Repositories
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
 
+        public async Task<Document?> GetByIdWithOcrResultAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Documents
+                .AsNoTracking()
+                .Include(d => d.OcrResult)
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
+
         public async Task<IReadOnlyList<Document>> GetByDepartmentAsync(
             int departmentId,
             int page = 1,
@@ -46,6 +54,18 @@ namespace CorpMindAI.Infrastructure.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task AddOcrResultAsync(OcrResult ocrResult, CancellationToken cancellationToken = default)
+        {
+            await _context.OcrResults.AddAsync(ocrResult, cancellationToken);
+        }
+
+        public async Task<OcrResult?> GetOcrResultByDocumentIdAsync(int documentId, CancellationToken cancellationToken = default)
+        {
+            return await _context.OcrResults
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.DocumentId == documentId, cancellationToken);
         }
     }
 }

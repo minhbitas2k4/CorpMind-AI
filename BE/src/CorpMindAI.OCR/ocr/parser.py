@@ -23,6 +23,7 @@ Với type == "table":
 
 from __future__ import annotations
 from typing import Any
+import unicodedata
 
 from models.ocr_result import (
     ComponentType,
@@ -81,6 +82,7 @@ def _parse_ocr_res(res: Any) -> tuple[list[OCRBlock], float]:
         except (IndexError, TypeError, ValueError, KeyError):
             continue
 
+        text = unicodedata.normalize("NFC", text)
         confidences.append(confidence)
         blocks.append(OCRBlock(text=text, confidence=confidence, bbox=bbox))
 
@@ -92,7 +94,16 @@ def _parse_table_res(res: Any) -> tuple[list[OCRBlock], float, str | None]:
     Parse phần ``res`` của một region table.
     Trả về: (blocks, avg_conf, html_string)
     """
-    if not res or not isinstance(res, dict):
+    if not res:
+        return [], 0.0, None
+
+    # Full-page OCR maps the same line dictionaries used by other semantic
+    # regions into tables. PP-Structure HTML remains supported when present.
+    if isinstance(res, list):
+        blocks, avg = _parse_ocr_res(res)
+        return blocks, avg, None
+
+    if not isinstance(res, dict):
         return [], 0.0, None
 
     html: str | None = res.get("html")

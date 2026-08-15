@@ -3,6 +3,7 @@ using System;
 using CorpMindAI.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CorpMindAI.Infrastructure.Migrations
 {
     [DbContext(typeof(CorpMindDbContext))]
-    partial class CorpMindDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809164030_AddStructuredOcrPersistence")]
+    partial class AddStructuredOcrPersistence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -420,20 +423,6 @@ namespace CorpMindAI.Infrastructure.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
                         .HasColumnName("raw_text_path");
-
-                    b.Property<DateTime?>("ReconstructedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reconstructed_at");
-
-                    b.Property<string>("ReconstructedStorageKey")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)")
-                        .HasColumnName("reconstructed_storage_key");
-
-                    b.Property<string>("ReconstructionStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("reconstruction_status");
 
                     b.Property<string>("SchemaVersion")
                         .HasMaxLength(32)

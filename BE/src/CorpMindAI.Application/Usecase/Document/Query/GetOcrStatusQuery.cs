@@ -62,10 +62,10 @@ namespace CorpMindAI.Application.Usecase.Document.Query
                 // Chỉ trả về kết quả chi tiết khi OCR hoàn thành
                 if (document.OcrStatus == "completed")
                 {
-                    var components = JsonSerializer.Deserialize<List<OcrComponentDto>>(
-                        document.OcrResult.ComponentsJson) ?? new();
-                    var validationErrors = JsonSerializer.Deserialize<List<OcrValidationErrorDto>>(
-                        document.OcrResult.ValidationErrorsJson) ?? new();
+                    var components = OcrContractDeserializer.DeserializeComponents(
+                        document.OcrResult.ComponentsJson);
+                    var validationErrors = OcrContractDeserializer.DeserializeValidationErrors(
+                        document.OcrResult.ValidationErrorsJson);
 
                     response.Result = new OcrResponseDto
                     {
@@ -76,6 +76,13 @@ namespace CorpMindAI.Application.Usecase.Document.Query
                         OverallLevel = document.OcrResult.OverallLevel,
                         Components = components,
                         ValidationErrors = validationErrors,
+                        StructuredDocument = string.IsNullOrWhiteSpace(document.OcrResult.StructuredDocumentJson)
+                            ? null
+                            : JsonSerializer.Deserialize<StructuredDocumentDto>(
+                                document.OcrResult.StructuredDocumentJson),
+                        ReconstructedStorageKey = document.OcrResult.ReconstructedStorageKey,
+                        ReconstructionStatus = document.OcrResult.ReconstructionStatus,
+                        ReconstructedAt = document.OcrResult.ReconstructedAt,
                     };
                 }
             }

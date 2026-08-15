@@ -1,6 +1,8 @@
 using CorpMindAI.Application.Usecase.Document.Command;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Hangfire;
+using System.Diagnostics;
 
 namespace CorpMindAI.Infrastructure.Jobs
 {
@@ -17,8 +19,10 @@ namespace CorpMindAI.Infrastructure.Jobs
             _logger = logger;
         }
 
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
         public async Task Execute(int documentId, int userId)
         {
+            var started = Stopwatch.StartNew();
             _logger.LogInformation(
                 "[Hangfire] Bắt đầu xử lý OCR job cho document {DocumentId}, user {UserId}",
                 documentId,
@@ -26,8 +30,6 @@ namespace CorpMindAI.Infrastructure.Jobs
 
             try
             {
-                // Gửi ProcessOcrJobCommand qua MediatR
-                // MediatR sẽ resolve ProcessOcrJobCommandHandler + tất cả dependencies
                 var result = await _mediator.Send(
                     new ProcessOcrJobCommand(documentId, userId));
 
@@ -38,14 +40,14 @@ namespace CorpMindAI.Infrastructure.Jobs
                         documentId,
                         result.Message);
 
-                    // Throw exception để Hangfire đánh dấu job là Failed và có thể retry
                     throw new InvalidOperationException(
                         $"OCR job failed for document {documentId}: {result.Message}");
                 }
 
                 _logger.LogInformation(
-                    "[Hangfire] OCR job hoàn thành thành công cho document {DocumentId}",
-                    documentId);
+                    "[Hangfire] OCR job hoàn thành cho document {DocumentId}: " +
+                    "pages={PageCount}, duration_ms={DurationMilliseconds}",
+                    documentId, result.Data?.TotalPages, started.ElapsedMilliseconds);
             }
             catch (InvalidOperationException)
             {
@@ -57,7 +59,6 @@ namespace CorpMindAI.Infrastructure.Jobs
                     "[Hangfire] Lỗi không mong đợi trong OCR job cho document {DocumentId}",
                     documentId);
 
-                // Wrap exception để Hangfire có thông tin rõ ràng hơn
                 throw new InvalidOperationException(
                     $"OCR job error for document {documentId}: {ex.Message}", ex);
             }

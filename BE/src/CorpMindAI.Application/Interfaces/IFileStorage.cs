@@ -16,6 +16,11 @@ namespace CorpMindAI.Application.Interfaces
             string storageKey,
             CancellationToken cancellationToken = default);
 
+        Task<string> UploadReconstructionAsync(
+            Stream fileStream,
+            int documentId,
+            CancellationToken cancellationToken = default);
+
         string GetPhysicalPath(string storageKey);
     }
 }

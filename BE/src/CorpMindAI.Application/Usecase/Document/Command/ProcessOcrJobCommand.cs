@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Diagnostics;
 using CorpMindAI.Application.DTOs.Common;
 using CorpMindAI.Application.DTOs.Document;
 using CorpMindAI.Application.Interfaces;
@@ -68,10 +69,10 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             if (!File.Exists(physicalPath))
             {
                 _logger.LogError(
-                    "[Hangfire Job] File không tồn tại: {PhysicalPath} cho document {DocumentId}",
-                    physicalPath,
+                    "[Hangfire Job] Source file is unavailable for document {DocumentId}",
                     command.DocumentId);
 
+                await PersistFailureAsync(command.DocumentId, "File does not exist on the server.", cancellationToken);
                 await UpdateDocumentStatusAsync(document, "failed", "failed", cancellationToken);
                 return ServiceResult<OcrResponseDto>.Fail("File không tồn tại trên server.");
             }
@@ -82,9 +83,8 @@ namespace CorpMindAI.Application.Usecase.Document.Command
                 await UpdateDocumentStatusAsync(document, "processing", "processing", cancellationToken);
 
                 _logger.LogInformation(
-                    "[Hangfire Job] Gọi OCR service cho document {DocumentId}, file: {Path}",
-                    command.DocumentId,
-                    physicalPath);
+                    "[Hangfire Job] Gọi OCR service cho document {DocumentId}",
+                    command.DocumentId);
 
                 // Gọi Python OCR service qua HTTP
                 var ocrResult = await _ocrService.ProcessOcrAsync(
@@ -100,26 +100,42 @@ namespace CorpMindAI.Application.Usecase.Document.Command
                         command.DocumentId,
                         ocrResult.ErrorMessage);
 
+                    await PersistFailureAsync(
+                        command.DocumentId,
+                        ocrResult.ErrorMessage ?? "Unknown OCR service failure.",
+                        cancellationToken);
                     await UpdateDocumentStatusAsync(document, "failed", "failed", cancellationToken);
                     return ServiceResult<OcrResponseDto>.Fail(
                         $"OCR thất bại: {ocrResult.ErrorMessage}");
                 }
 
                 // OCR thành công — lưu kết quả vào DB
-                var entity = new Domain.Entities.OcrResult
+                var entity = await _documentRepo.GetOcrResultByDocumentIdAsync(
+                    command.DocumentId, cancellationToken);
+                if (entity is null)
                 {
-                    DocumentId = command.DocumentId,
-                    TotalPages = ocrResult.TotalPages,
-                    PageAverageConfidence = ocrResult.PageAverageConfidence,
-                    OverallLevel = ocrResult.OverallLevel,
-                    ComponentsJson = ocrResult.ComponentsJson,
-                    ValidationErrorsJson = ocrResult.ValidationErrorsJson,
-                    Status = "completed",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                };
+                    entity = new Domain.Entities.OcrResult
+                    {
+                        DocumentId = command.DocumentId,
+                        CreatedAt = DateTime.UtcNow,
+                    };
+                    await _documentRepo.AddOcrResultAsync(entity, cancellationToken);
+                }
+                entity.TotalPages = ocrResult.TotalPages;
+                entity.PageAverageConfidence = ocrResult.PageAverageConfidence;
+                entity.OverallLevel = ocrResult.OverallLevel;
+                entity.ComponentsJson = ocrResult.ComponentsJson;
+                entity.ValidationErrorsJson = ocrResult.ValidationErrorsJson;
+                entity.SchemaVersion = ocrResult.SchemaVersion;
+                entity.StructuredDocumentJson = ocrResult.StructuredDocumentJson;
+                entity.ReconstructionStatus = "not_started";
+                entity.ReconstructedStorageKey = null;
+                entity.ReconstructedAt = null;
+                entity.ErrorMessage = null;
+                entity.Status = "completed";
+                entity.UpdatedAt = DateTime.UtcNow;
 
-                await _documentRepo.AddOcrResultAsync(entity, cancellationToken);
+                await TransferReconstructionAsync(command.DocumentId, ocrResult, entity, cancellationToken);
 
                 // Cập nhật document status sang completed
                 await UpdateDocumentStatusAsync(document, "completed", "completed", cancellationToken);
@@ -139,6 +155,7 @@ namespace CorpMindAI.Application.Usecase.Document.Command
                     "[Hangfire Job] Lỗi khi xử lý OCR cho document {DocumentId}",
                     command.DocumentId);
 
+                await PersistFailureAsync(command.DocumentId, ex.Message, cancellationToken);
                 await UpdateDocumentStatusAsync(document, "failed", "failed", cancellationToken);
                 return ServiceResult<OcrResponseDto>.Fail(
                     $"Lỗi hệ thống khi xử lý OCR: {ex.Message}");
@@ -164,10 +181,9 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             int documentId,
             Domain.Entities.OcrResult entity)
         {
-            var components = JsonSerializer.Deserialize<List<OcrComponentDto>>(
-                entity.ComponentsJson) ?? new();
-            var validationErrors = JsonSerializer.Deserialize<List<OcrValidationErrorDto>>(
-                entity.ValidationErrorsJson) ?? new();
+            var components = OcrContractDeserializer.DeserializeComponents(entity.ComponentsJson);
+            var validationErrors = OcrContractDeserializer.DeserializeValidationErrors(
+                entity.ValidationErrorsJson);
 
             return new OcrResponseDto
             {
@@ -178,7 +194,163 @@ namespace CorpMindAI.Application.Usecase.Document.Command
                 OverallLevel = entity.OverallLevel,
                 Components = components,
                 ValidationErrors = validationErrors,
+                StructuredDocument = DeserializeStructuredDocument(entity.StructuredDocumentJson),
+                ReconstructedStorageKey = entity.ReconstructedStorageKey,
+                ReconstructionStatus = entity.ReconstructionStatus,
+                ReconstructedAt = entity.ReconstructedAt,
             };
+        }
+
+        private async Task PersistFailureAsync(
+            int documentId,
+            string errorMessage,
+            CancellationToken cancellationToken)
+        {
+            var entity = await _documentRepo.GetOcrResultByDocumentIdAsync(documentId, cancellationToken);
+            if (entity is null)
+            {
+                entity = new Domain.Entities.OcrResult
+                {
+                    DocumentId = documentId,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                await _documentRepo.AddOcrResultAsync(entity, cancellationToken);
+            }
+            entity.TotalPages = 0;
+            entity.PageAverageConfidence = 0;
+            entity.OverallLevel = "failed";
+            entity.ComponentsJson = "[]";
+            entity.ValidationErrorsJson = "[]";
+            entity.SchemaVersion = null;
+            entity.StructuredDocumentJson = null;
+            entity.ReconstructedStorageKey = null;
+            entity.ReconstructionStatus = null;
+            entity.ReconstructedAt = null;
+            entity.ErrorMessage = errorMessage;
+            entity.Status = "failed";
+            entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        private async Task TransferReconstructionAsync(
+            int documentId,
+            OcrServiceResponse ocrResult,
+            Domain.Entities.OcrResult entity,
+            CancellationToken cancellationToken)
+        {
+            var artifact = ocrResult.ReconstructionArtifact;
+            if (artifact is null || string.IsNullOrWhiteSpace(artifact.ArtifactId))
+            {
+                entity.ReconstructionStatus = "failed";
+                _logger.LogWarning(
+                    "OCR completed for document {DocumentId}, but no reconstruction artifact was available.",
+                    documentId);
+                return;
+            }
+            if (artifact.DocumentId != documentId.ToString())
+            {
+                entity.ReconstructionStatus = "failed";
+                _logger.LogWarning(
+                    "Reconstruction artifact document mismatch for document {DocumentId}.", documentId);
+                return;
+            }
+
+            var transferRoot = Path.Combine(Path.GetTempPath(), "CorpMindAI", "ocr-artifact-transfer");
+            Directory.CreateDirectory(transferRoot);
+            CleanupAbandonedTransfers(transferRoot);
+            var temporaryPath = Path.Combine(transferRoot, $"{Guid.NewGuid():N}.pdf");
+            var stored = false;
+            var transferStarted = Stopwatch.StartNew();
+            try
+            {
+                await using (var temporaryOutput = new FileStream(
+                    temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None,
+                    bufferSize: 81920, useAsync: true))
+                {
+                    await _ocrService.DownloadReconstructionAsync(
+                        documentId, artifact.ArtifactId, temporaryOutput, cancellationToken);
+                }
+
+                await using var artifactStream = new FileStream(
+                    temporaryPath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    bufferSize: 81920, useAsync: true);
+                entity.ReconstructedStorageKey = await _fileStorage.UploadReconstructionAsync(
+                    artifactStream, documentId, cancellationToken);
+                entity.ReconstructionStatus = "completed";
+                entity.ReconstructedAt = DateTime.UtcNow;
+                stored = true;
+                _logger.LogInformation(
+                    "Reconstruction artifact transferred and stored for document {DocumentId} " +
+                    "at storage key {StorageKey} in {ElapsedMilliseconds} ms.",
+                    documentId, entity.ReconstructedStorageKey, transferStarted.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                entity.ReconstructionStatus = "failed";
+                entity.ReconstructedStorageKey = null;
+                entity.ReconstructedAt = null;
+                _logger.LogError(ex,
+                    "OCR succeeded but reconstruction transfer/storage failed for document {DocumentId}.",
+                    documentId);
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Could not clean local reconstruction transfer file for document {DocumentId}.",
+                        documentId);
+                }
+            }
+
+            if (!stored)
+                return;
+
+            try
+            {
+                await _ocrService.CleanupReconstructionAsync(
+                    documentId, artifact.ArtifactId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Reconstruction was durably stored, but Python cleanup failed for document {DocumentId}.",
+                    documentId);
+            }
+        }
+
+        private void CleanupAbandonedTransfers(string transferRoot)
+        {
+            var resolvedRoot = Path.GetFullPath(transferRoot);
+            var threshold = DateTime.UtcNow.AddDays(-1);
+            foreach (var path in Directory.EnumerateFiles(resolvedRoot, "*.pdf", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    var resolvedPath = Path.GetFullPath(path);
+                    if (!resolvedPath.StartsWith(
+                            resolvedRoot + Path.DirectorySeparatorChar,
+                            StringComparison.OrdinalIgnoreCase) ||
+                        File.GetLastWriteTimeUtc(resolvedPath) >= threshold)
+                        continue;
+                    File.Delete(resolvedPath);
+                    _logger.LogInformation("Removed abandoned CorpMindAI OCR transfer file.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not remove an abandoned CorpMindAI OCR transfer file.");
+                }
+            }
+        }
+
+        private static StructuredDocumentDto? DeserializeStructuredDocument(string? json)
+        {
+            return string.IsNullOrWhiteSpace(json)
+                ? null
+                : JsonSerializer.Deserialize<StructuredDocumentDto>(json);
         }
     }
 }

@@ -32,6 +32,24 @@ namespace CorpMindAI.Domain.Entities
         [Column("validation_errors_json", TypeName = "text")]
         public string ValidationErrorsJson { get; set; } = "[]";
 
+        [MaxLength(32)]
+        [Column("schema_version")]
+        public string? SchemaVersion { get; set; }
+
+        [Column("structured_document_json", TypeName = "jsonb")]
+        public string? StructuredDocumentJson { get; set; }
+
+        [MaxLength(512)]
+        [Column("reconstructed_storage_key")]
+        public string? ReconstructedStorageKey { get; set; }
+
+        [MaxLength(20)]
+        [Column("reconstruction_status")]
+        public string? ReconstructionStatus { get; set; }
+
+        [Column("reconstructed_at")]
+        public DateTime? ReconstructedAt { get; set; }
+
         [MaxLength(512)]
         [Column("raw_text_path")]
         public string? RawTextPath { get; set; }

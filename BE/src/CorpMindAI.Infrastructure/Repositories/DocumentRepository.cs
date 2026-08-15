@@ -27,7 +27,6 @@ namespace CorpMindAI.Infrastructure.Repositories
         public async Task<Document?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.Documents
-                .AsNoTracking()
                 .Include(d => d.UploadedBy)
                 .Include(d => d.Department)
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
@@ -64,7 +63,6 @@ namespace CorpMindAI.Infrastructure.Repositories
         public async Task<OcrResult?> GetOcrResultByDocumentIdAsync(int documentId, CancellationToken cancellationToken = default)
         {
             return await _context.OcrResults
-                .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.DocumentId == documentId, cancellationToken);
         }
     }

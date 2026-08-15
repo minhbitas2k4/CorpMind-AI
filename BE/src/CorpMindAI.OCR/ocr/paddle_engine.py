@@ -1,11 +1,3 @@
-"""
-paddle_engine.py
-~~~~~~~~~~~~~~~~
-PP-Structure detects semantic layout only. PaddleOCR reads each complete 200-DPI
-page once, and its lines are then associated with layout regions. Text outside
-all layout regions is retained in synthetic text components.
-"""
-
 from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 import logging
@@ -13,6 +5,9 @@ import os
 import threading
 from typing import Optional
 import unicodedata
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 import cv2
 from paddleocr import PPStructure, PaddleOCR
@@ -22,21 +17,7 @@ logger = logging.getLogger("ocr.paddle_engine")
 
 
 class PaddleEngine:
-    """
-    Wrapper for English PP-Structure layout and full-page PaddleOCR recognition.
-
-    Parameters
-    ----------
-    lang : str
-        Recognition language. This English-only service defaults to "en".
-    table : bool
-        Bật nhận dạng bảng (mặc định True).
-    ocr : bool
-        Enable one full-page recognition pass (default True).
-    show_log : bool
-        In log nội bộ (mặc định False).
-    """
-
+    
     def __init__(
         self,
         lang: str = "en",
@@ -45,12 +26,12 @@ class PaddleEngine:
         detect_missed: bool = True,
         show_log: bool = False,
     ) -> None:
-        # Layout model chỉ hỗ trợ "en"/"ch" -> luôn cố định "en" ở đây.
-        # OCR nội bộ của PPStructure bị tắt vì nó không đọc được dấu tiếng Việt.
+
         self._layout_engine = PPStructure(
             lang="en",
             table=table,
             ocr=False,
+            cpu_threads=1,
             show_log=show_log,
         )
         self._layout_lock = threading.Lock()
@@ -60,20 +41,17 @@ class PaddleEngine:
             self._ocr_engine = PaddleOCR(
                 lang=lang,
                 use_angle_cls=True,
+                cpu_threads=1,
+                rec_batch_num=1,
+                cls_batch_num=1,
                 show_log=show_log,
             )
             self._log_recognition_model(lang)
         self._ocr_lock = threading.Lock()
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def analyze(self, image_path: str) -> list[dict]:
-        """
-        Detect semantic regions, recognize the full page once, then map every
-        OCR line to at most one region. Layout misses cannot remove OCR text.
-        """
+
         image = cv2.imread(image_path)
         if image is None:
             raise FileNotFoundError(f"Không đọc được ảnh: {image_path}")
@@ -97,7 +75,6 @@ class PaddleEngine:
             regions: list[dict] = self._layout_engine(layout_image)
         logger.info("PP-Structure found %d regions", len(regions))
 
-        # Scale bbox về hệ toạ độ gốc nếu đã resize ảnh cho layout
         if scale < 1.0:
             inv_scale = 1.0 / scale
             for region in regions:
@@ -120,9 +97,6 @@ class PaddleEngine:
         raw = self.analyze(image_path)
         return parse_structure_result(raw)
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _expand_ocr_bbox(
@@ -134,9 +108,6 @@ class PaddleEngine:
         x1, y1, x2, y2 = map(float, bbox)
         region_height = max(0.0, y2 - y1)
 
-        # Vietnamese diacritics need more vertical than horizontal breathing room.
-        # Keep the padding bounded so adjacent layout regions are not needlessly
-        # pulled into the OCR crop.
         vertical_padding = min(max(round(region_height * 0.18), 2), 24)
         horizontal_padding = min(max(round(region_height * 0.08), 2), 16)
 
@@ -217,7 +188,12 @@ class PaddleEngine:
         for region in regions:
             region["res"].sort(key=lambda item: (cls._line_bounds(item)[1], cls._line_bounds(item)[0]))
         for line in uncovered:
-            regions.append({"type": "text", "bbox": list(cls._line_bounds(line)), "res": [line]})
+            regions.append({
+                "type": "text",
+                "bbox": list(cls._line_bounds(line)),
+                "res": [line],
+                "synthetic_region": True,
+            })
         return regions
 
     @staticmethod
@@ -257,10 +233,7 @@ class PaddleEngine:
 
     @staticmethod
     def _edit_distance_one(left: str, right: str) -> bool:
-        # The observed English identifier errors are substitutions among
-        # uppercase I, lowercase l, and digit 1. Requiring equal length and
-        # that exact confusion set prevents generic corrections (A -> AI,
-        # DPI -> API, etc.).
+      
         if len(left) != len(right):
             return False
         differences = [(left_char, right_char) for left_char, right_char in zip(left, right) if left_char != right_char]

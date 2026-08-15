@@ -9,6 +9,14 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment() && OperatingSystem.IsWindows())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

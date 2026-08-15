@@ -66,8 +66,8 @@ namespace CorpMindAI.Infrastructure.Storage
             Directory.CreateDirectory(directory);
 
             _logger.LogDebug(
-                "Đang lưu file '{OriginalName}' → '{PhysicalPath}' (storageKey: '{StorageKey}')",
-                originalFileName, physicalPath, storageKey);
+                "Đang lưu file '{OriginalName}' (storageKey: '{StorageKey}')",
+                originalFileName, storageKey);
 
             // CopyToAsync: streaming — không đọc toàn bộ file vào RAM
             await using var fileWriteStream = new FileStream(
@@ -125,6 +125,29 @@ namespace CorpMindAI.Infrastructure.Storage
             }
 
             return Task.CompletedTask;
+        }
+
+        public async Task<string> UploadReconstructionAsync(
+            Stream fileStream,
+            int documentId,
+            CancellationToken cancellationToken = default)
+        {
+            if (documentId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(documentId));
+
+            var storageKey = $"{LogicalPrefix}/{documentId}/reconstructed.pdf";
+            var physicalPath = StorageKeyToPhysicalPath(storageKey);
+            var basePath = Path.GetFullPath(GetPhysicalBasePath());
+            var resolvedPath = Path.GetFullPath(physicalPath);
+            if (!resolvedPath.StartsWith(basePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Generated artifact path escaped storage root.");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(resolvedPath)!);
+            await using var output = new FileStream(
+                resolvedPath, FileMode.Create, FileAccess.Write, FileShare.None,
+                bufferSize: 81920, useAsync: true);
+            await fileStream.CopyToAsync(output, cancellationToken);
+            return storageKey;
         }
     }
 }

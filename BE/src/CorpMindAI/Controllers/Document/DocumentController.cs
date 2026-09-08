@@ -84,11 +84,17 @@ namespace CorpMindAI.Api.Controllers.Document
                 return Unauthorized(new { message = "Không thể xác định danh tính người dùng từ token." });
 
             // Gửi ProcessOcrCommand — handler sẽ validate + enqueue Hangfire job
-            var command = new ProcessOcrCommand(document_id, currentUserId);
+            var command = new ProcessOcrCommand(document_id, currentUserId, department_id);
             var result = await _mediator.Send(command, cancellationToken);
 
             if (!result.Success)
+            {
+                if (result.Message.Contains("permission", StringComparison.OrdinalIgnoreCase) ||
+                    result.Message.Contains("department", StringComparison.OrdinalIgnoreCase))
+                    return Forbid();
+
                 return BadRequest(new { message = result.Message });
+            }
 
             return Accepted(new
             {
@@ -111,7 +117,7 @@ namespace CorpMindAI.Api.Controllers.Document
             if (userIdClaim is null || !int.TryParse(userIdClaim, out int currentUserId))
                 return Unauthorized(new { message = "Không thể xác định danh tính người dùng từ token." });
 
-            var query = new GetOcrStatusQuery(document_id, currentUserId);
+            var query = new GetOcrStatusQuery(document_id, currentUserId, department_id);
             var result = await _mediator.Send(query, cancellationToken);
 
             if (!result.Success)

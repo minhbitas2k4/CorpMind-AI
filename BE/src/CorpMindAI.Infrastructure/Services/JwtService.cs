@@ -40,13 +40,16 @@ namespace CorpMindAI.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Name, user.FullName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("token_version", user.TokenVersion.ToString()),
+                new Claim("department_id", user.DepartmentId?.ToString() ?? string.Empty)
             };
 
             foreach (var userRole in user.UserRoles)
             {
                 // Claim DepartmentRole lưu dưới định dạng standard Role:DepartmentId
                 claims.Add(new Claim("DepartmentRole", $"{userRole.Role.RoleName}:{userRole.DepartmentId}"));
+                claims.Add(new Claim(ClaimTypes.Role, userRole.Role.RoleName));
             }
 
             var tokenDescriptor = new SecurityTokenDescriptor

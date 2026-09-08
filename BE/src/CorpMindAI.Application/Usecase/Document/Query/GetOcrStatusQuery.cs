@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using CorpMindAI.Application.DTOs.Common;
 using CorpMindAI.Application.DTOs.Document;
@@ -7,23 +8,31 @@ using Microsoft.Extensions.Logging;
 
 namespace CorpMindAI.Application.Usecase.Document.Query
 {
-    // Query kiểm tra trạng thái OCR hiện tại của document.
-    // Client gọi endpoint này để polling sau khi OCR job đã được enqueue.
-    public record GetOcrStatusQuery(int DocumentId, int UserId)
+    public record GetOcrStatusQuery(int DocumentId, int UserId, int DepartmentId = 0)
         : IRequest<ServiceResult<OcrStatusResponseDto>>;
 
     public class GetOcrStatusQueryHandler
         : IRequestHandler<GetOcrStatusQuery, ServiceResult<OcrStatusResponseDto>>
     {
         private readonly IDocumentRepository _documentRepo;
+        private readonly IUserRepository _userRepo;
         private readonly ILogger<GetOcrStatusQueryHandler> _logger;
 
         public GetOcrStatusQueryHandler(
             IDocumentRepository documentRepo,
+            IUserRepository userRepo,
             ILogger<GetOcrStatusQueryHandler> logger)
         {
             _documentRepo = documentRepo;
+            _userRepo = userRepo;
             _logger = logger;
+        }
+
+        public GetOcrStatusQueryHandler(
+            IDocumentRepository documentRepo,
+            ILogger<GetOcrStatusQueryHandler> logger)
+            : this(documentRepo, null!, logger)
+        {
         }
 
         public async Task<ServiceResult<OcrStatusResponseDto>> Handle(
@@ -31,22 +40,42 @@ namespace CorpMindAI.Application.Usecase.Document.Query
             CancellationToken cancellationToken)
         {
             _logger.LogDebug(
-                "Kiểm tra trạng thái OCR cho document {DocumentId} bởi user {UserId}",
+                "Get OCR status for document {DocumentId} by user {UserId}",
                 query.DocumentId,
                 query.UserId);
 
-            // Lấy document kèm thông tin OCR (nếu có)
             var document = await _documentRepo.GetByIdWithOcrResultAsync(
-                query.DocumentId, cancellationToken);
+                query.DocumentId,
+                cancellationToken);
 
             if (document is null)
                 return ServiceResult<OcrStatusResponseDto>.Fail(
-                    $"Không tìm thấy document với id {query.DocumentId}.");
+                    $"Document {query.DocumentId} was not found.");
 
-            // Kiểm tra quyền — chỉ người upload mới được xem trạng thái OCR
-            if (document.UploadedById != query.UserId)
+            if (query.DepartmentId > 0 && document.DepartmentId != query.DepartmentId)
                 return ServiceResult<OcrStatusResponseDto>.Fail(
-                    "Bạn không có quyền xem trạng thái OCR của document này.");
+                    "Document does not belong to the requested department.");
+
+            if (query.DepartmentId == 0 && _userRepo is null)
+            {
+                if (document.UploadedById != query.UserId)
+                    return ServiceResult<OcrStatusResponseDto>.Fail(
+                        "You do not have permission to view this document's OCR status.");
+            }
+            else
+            {
+                var requestor = await _userRepo.GetUserById(query.UserId);
+                var canReadDepartmentDocument = requestor is not null &&
+                    string.Equals(requestor.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+                    requestor.UserRoles.Any(ur =>
+                        ur.DepartmentId == document.DepartmentId &&
+                        (ur.Role.RoleName == "knowledge_contributor" ||
+                         ur.Role.RoleName == "knowledge_manager"));
+
+                if (!canReadDepartmentDocument)
+                    return ServiceResult<OcrStatusResponseDto>.Fail(
+                        "You do not have permission to view this document's OCR status.");
+            }
 
             var response = new OcrStatusResponseDto
             {
@@ -54,12 +83,10 @@ namespace CorpMindAI.Application.Usecase.Document.Query
                 OcrStatus = document.OcrStatus,
             };
 
-            // Nếu đã có kết quả OCR — populate Result và ErrorMessage
             if (document.OcrResult is not null)
             {
                 response.ErrorMessage = document.OcrResult.ErrorMessage;
 
-                // Chỉ trả về kết quả chi tiết khi OCR hoàn thành
                 if (document.OcrStatus == "completed")
                 {
                     var components = OcrContractDeserializer.DeserializeComponents(

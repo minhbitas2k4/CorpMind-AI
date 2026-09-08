@@ -2,6 +2,7 @@ using CorpMindAI.Application.DTOs.Auth;
 using CorpMindAI.Application.Usecase.Auth.Command;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MediatR;
 
 namespace CorpMindAI.Api.Controllers.Auth
@@ -18,6 +19,7 @@ namespace CorpMindAI.Api.Controllers.Auth
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] AuthRequestDto dto)
         {
             var result = await _mediator.Send(new LoginCommand(dto));

@@ -30,7 +30,7 @@ namespace CorpMindAI.Api.Controllers.Auth
                 return Unauthorized(new { message = "Invalid requestor credentials." });
             }
 
-            var result = await _mediator.Send(new GetUserByIdQuery(id, requestorUserId));
+            var result = await _mediator.Send(new GetUserByIdQuery(id, requestorUserId, department_id));
 
             if (!result.Success)
             {

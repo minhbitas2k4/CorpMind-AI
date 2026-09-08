@@ -41,6 +41,9 @@ namespace CorpMindAI.Domain.Entities
         [Column("status")]
         public string Status { get; set; } = "active";
 
+        [Column("token_version")]
+        public int TokenVersion { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

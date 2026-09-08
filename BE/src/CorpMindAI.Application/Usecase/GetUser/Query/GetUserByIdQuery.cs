@@ -11,7 +11,7 @@ using CorpMindAI.Application.DTOs.UserDto;
 
 namespace CorpMindAI.Application.Usecase.GetUser.Query
 {
-    public record GetUserByIdQuery(int Id, int RequestorUserId) : IRequest<ServiceResult<UserDTO>>;
+    public record GetUserByIdQuery(int Id, int RequestorUserId, int DepartmentId) : IRequest<ServiceResult<UserDTO>>;
 
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ServiceResult<UserDTO>>
     {
@@ -36,10 +36,15 @@ namespace CorpMindAI.Application.Usecase.GetUser.Query
                 return ServiceResult<UserDTO>.Fail("Access denied: Invalid requestor.");
             }
 
-            bool isSysAdmin = requestor.UserRoles.Any(ur => ur.Role.RoleName == "system_admin");
-            bool isSameDepartment = requestor.DepartmentId == targetUser.DepartmentId && targetUser.DepartmentId != null;
+            bool hasRequiredRoleInDepartment = requestor.UserRoles.Any(ur =>
+                ur.DepartmentId == query.DepartmentId &&
+                (ur.Role.RoleName == "knowledge_contributor" ||
+                 ur.Role.RoleName == "knowledge_manager" ||
+                 ur.Role.RoleName == "system_admin"));
 
-            if (!isSysAdmin && !isSameDepartment)
+            bool targetBelongsToDepartment = targetUser.DepartmentId == query.DepartmentId;
+
+            if (!hasRequiredRoleInDepartment || !targetBelongsToDepartment)
             {
                 return ServiceResult<UserDTO>.Fail("Access denied: You do not have permission to view this user's details.");
             }

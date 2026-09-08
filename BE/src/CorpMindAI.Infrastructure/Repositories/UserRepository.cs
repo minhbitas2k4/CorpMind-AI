@@ -36,5 +36,30 @@ namespace CorpMindAI.Infrastructure.Repositories
                     .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
+
+        public async Task<UserAuthorizationState?> GetAuthorizationStateAsync(int id)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.Id == id)
+                .Select(u => new
+                {
+                    u.Status,
+                    u.TokenVersion,
+                    u.DepartmentId,
+                    DepartmentRoles = u.UserRoles
+                        .Select(ur => ur.Role.RoleName + ":" + ur.DepartmentId)
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return user is null
+                ? null
+                : new UserAuthorizationState(
+                    user.Status,
+                    user.TokenVersion,
+                    user.DepartmentId,
+                    user.DepartmentRoles);
+        }
     }
 }

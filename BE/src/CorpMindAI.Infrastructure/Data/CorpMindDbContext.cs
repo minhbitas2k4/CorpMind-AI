@@ -36,6 +36,7 @@ namespace CorpMindAI.Infrastructure.Data
             modelBuilder.Entity<Department>().HasIndex(d => d.Name).IsUnique();
             modelBuilder.Entity<Role>().HasIndex(r => r.RoleName).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().Property(u => u.TokenVersion).HasDefaultValue(0);
 
             modelBuilder.Entity<AiKnowledgeConflict>()
                 .HasOne(c => c.SourceDocument)

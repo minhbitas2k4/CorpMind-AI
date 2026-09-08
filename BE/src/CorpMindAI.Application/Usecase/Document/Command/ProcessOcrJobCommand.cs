@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace CorpMindAI.Application.Usecase.Document.Command
 {
     // MediatR Command xử lý OCR thực sự — được gọi bởi Hangfire background job.
-    public record ProcessOcrJobCommand(int DocumentId, int UserId)
+    public record ProcessOcrJobCommand(int DocumentId, int UserId, int DepartmentId = 0)
         : IRequest<ServiceResult<OcrResponseDto>>;
 
     public class ProcessOcrJobCommandHandler
@@ -20,19 +20,22 @@ namespace CorpMindAI.Application.Usecase.Document.Command
         private readonly IOcrService _ocrService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ProcessOcrJobCommandHandler> _logger;
+        private readonly IUserRepository? _userRepo;
 
         public ProcessOcrJobCommandHandler(
             IDocumentRepository documentRepo,
             IFileStorage fileStorage,
             IOcrService ocrService,
             IUnitOfWork unitOfWork,
-            ILogger<ProcessOcrJobCommandHandler> logger)
+            ILogger<ProcessOcrJobCommandHandler> logger,
+            IUserRepository? userRepo = null)
         {
             _documentRepo = documentRepo;
             _fileStorage = fileStorage;
             _ocrService = ocrService;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userRepo = userRepo;
         }
 
         public async Task<ServiceResult<OcrResponseDto>> Handle(
@@ -56,7 +59,32 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             }
 
             // Kiểm tra file type — chỉ hỗ trợ PDF
-            if (!document.FileType?.StartsWith("application/pdf") ?? true)
+            if (command.DepartmentId > 0 && document.DepartmentId != command.DepartmentId)
+            {
+                _logger.LogWarning(
+                    "[Hangfire Job] Document {DocumentId} no longer belongs to department {DepartmentId}",
+                    command.DocumentId,
+                    command.DepartmentId);
+                return ServiceResult<OcrResponseDto>.Fail(
+                    "Document does not belong to the requested department.");
+            }
+
+            if (_userRepo is not null)
+            {
+                var requestor = await _userRepo.GetUserById(command.UserId);
+                var canProcessDepartmentDocument = requestor is not null &&
+                    string.Equals(requestor.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+                    requestor.UserRoles.Any(ur =>
+                        ur.DepartmentId == document.DepartmentId &&
+                        (ur.Role.RoleName == "knowledge_contributor" ||
+                         ur.Role.RoleName == "knowledge_manager"));
+
+                if (!canProcessDepartmentDocument)
+                    return ServiceResult<OcrResponseDto>.Fail(
+                        "The requesting user is no longer authorized to process this document.");
+            }
+
+            if (!document.FileType?.StartsWith("application/pdf", StringComparison.OrdinalIgnoreCase) ?? true)
             {
                 _logger.LogWarning(
                     "[Hangfire Job] Document {DocumentId} không phải PDF — bỏ qua",

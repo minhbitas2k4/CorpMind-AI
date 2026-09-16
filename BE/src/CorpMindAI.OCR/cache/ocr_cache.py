@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import threading
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger("ocr.cache")
 
@@ -20,9 +20,9 @@ class OCRResultCache:
         os.makedirs(self._cache_dir, exist_ok=True)
         self._load_disk_cache()
 
-    def get(self, file_path: str) -> Optional[dict]:
+    def get(self, file_path: str, cache_identity: dict[str, Any] | str | None = None) -> Optional[dict]:
         """Trả về cached result nếu file hash trùng, None nếu miss."""
-        key = self._hash_file(file_path)
+        key = self._cache_key(file_path, cache_identity)
         if key is None:
             return None
 
@@ -41,9 +41,14 @@ class OCRResultCache:
         logger.info("Cache HIT for %s (hash=%s)", file_path, key[:12])
         return entry.get("result")
 
-    def put(self, file_path: str, result: dict) -> None:
+    def put(
+        self,
+        file_path: str,
+        result: dict,
+        cache_identity: dict[str, Any] | str | None = None,
+    ) -> None:
         """Lưu kết quả OCR vào cache (in-memory + disk)."""
-        key = self._hash_file(file_path)
+        key = self._cache_key(file_path, cache_identity)
         if key is None:
             return
 
@@ -91,6 +96,23 @@ class OCRResultCache:
         except OSError as e:
             logger.warning("Cannot hash file %s: %s", file_path, e)
             return None
+
+    @staticmethod
+    def _identity_text(cache_identity: dict[str, Any] | str | None) -> str:
+        if cache_identity is None:
+            return ""
+        if isinstance(cache_identity, str):
+            return cache_identity
+        return json.dumps(cache_identity, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+    def _cache_key(self, file_path: str, cache_identity: dict[str, Any] | str | None = None) -> Optional[str]:
+        file_hash = self._hash_file(file_path)
+        if file_hash is None:
+            return None
+        identity = self._identity_text(cache_identity)
+        if not identity:
+            return file_hash
+        return hashlib.sha256(f"{file_hash}|{identity}".encode("utf-8")).hexdigest()
 
     def _disk_path(self, key: str) -> str:
         return os.path.join(self._cache_dir, f"{key}.json")

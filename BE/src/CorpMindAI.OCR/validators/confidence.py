@@ -11,12 +11,18 @@ def get_confidence_level(score: float) -> str:
     return "need_review"
 
 
-def evaluate(response):
+def evaluate(response, source_fidelity=None):
     """
     Đánh giá độ tin cậy tổng thể của toàn trang, dựa trên
     page_average_confidence.
     """
-    return get_confidence_level(response.page_average_confidence)
+    level = get_confidence_level(response.page_average_confidence)
+    if source_fidelity:
+        codes = source_fidelity.get("codes", [])
+        fidelity = source_fidelity.get("fidelity")
+        if codes or (fidelity is not None and fidelity < source_fidelity.get("threshold", 1.0)):
+            return "need_review"
+    return level
 
 
 def evaluate_components(response):

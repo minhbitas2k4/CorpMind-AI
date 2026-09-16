@@ -99,6 +99,14 @@ namespace CorpMindAI.Infrastructure.Services
                     root.TryGetProperty("document_id", out var responseDocumentId) &&
                     root.TryGetProperty("pages", out var structuredPages))
                 {
+                    JsonElement? extractionIdentity = root.TryGetProperty(
+                        "extraction_identity", out var identity)
+                        ? identity.Clone()
+                        : null;
+                    JsonElement? sourceFidelity = root.TryGetProperty(
+                        "source_fidelity", out var fidelity)
+                        ? fidelity.Clone()
+                        : null;
                     // Persist the versioned document envelope, not merely the pages array.
                     // JsonElement serialization preserves every nested field supplied by Python.
                     result.StructuredDocumentJson = JsonSerializer.Serialize(new
@@ -107,6 +115,8 @@ namespace CorpMindAI.Infrastructure.Services
                         document_id = responseDocumentId.GetString() ?? documentId.ToString(),
                         total_pages = result.TotalPages,
                         pages = structuredPages,
+                        extraction_identity = extractionIdentity,
+                        source_fidelity = sourceFidelity,
                     });
                 }
 

@@ -12,14 +12,18 @@ class OCRPipeline:
     def __init__(self, engine: PaddleEngine | None = None):
         self.engine = engine or PaddleEngine()
 
-    def process_image(self, image_path):
-        response = self.engine.recognize(image_path)
+    def process_image(self, image_path, native_page: dict | None = None):
+        try:
+            response = self.engine.recognize(image_path, native_page=native_page)
+        except TypeError:
+            response = self.engine.recognize(image_path)
         return response
 
     def process_multiple_images(
         self,
         image_paths: list[str],
         max_workers: int | None = None,
+        native_pages: list[dict] | None = None,
     ) -> list[StructureResponse]:
 
         n = len(image_paths)
@@ -28,7 +32,11 @@ class OCRPipeline:
         logger.info("Processing %d pages sequentially with bounded Paddle batches", n)
         results: list[StructureResponse] = []
         for index, image_path in enumerate(image_paths, 1):
-            results.append(self.engine.recognize(image_path))
+            native_page = native_pages[index - 1] if native_pages and index <= len(native_pages) else None
+            try:
+                results.append(self.engine.recognize(image_path, native_page=native_page))
+            except TypeError:
+                results.append(self.engine.recognize(image_path))
             logger.info("Page %d/%d completed: %s", index, n, image_path)
         return results
 

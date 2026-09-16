@@ -33,12 +33,13 @@ async def lifespan(app: FastAPI):
     ensure_writable_directory(settings.asset_root)
     ensure_writable_directory(settings.reconstruction_output_root)
     logger.info(
-        "OCR configuration validated: language=%s dpi=%d omp_threads=%d mkl_threads=%d",
+        "OCR configuration validated: language=%s dpi=%d extraction_mode=%s fidelity_threshold=%.3f omp_threads=%d mkl_threads=%d",
         settings.language, settings.render_dpi,
+        settings.extraction_mode, settings.source_fidelity_threshold,
         settings.omp_num_threads, settings.mkl_num_threads,
     )
     logger.info("Đang load OCR engine (PP-Structure + PaddleOCR)...")
-    engine = PaddleEngine(lang=settings.language)
+    engine = PaddleEngine(lang=settings.language, table=True)
     pipeline = OCRPipeline(engine=engine)
     reconstruction = ReconstructionService(settings.reconstruction_output_root)
     ocr_service = OCRService(
@@ -46,6 +47,8 @@ async def lifespan(app: FastAPI):
         asset_store=LocalAssetStore(settings.asset_root),
         reconstruction_service=reconstruction,
         render_dpi=settings.render_dpi,
+        extraction_mode=settings.extraction_mode,
+        source_fidelity_threshold=settings.source_fidelity_threshold,
     )
     ocr_document_lock = asyncio.Lock()
     logger.info("OCR engine đã sẵn sàng.")
@@ -126,6 +129,8 @@ async def run_ocr(request: OCRRequest):
         pages=result["pages"],
         asset_processing_seconds=result.get("asset_processing_seconds", 0.0),
         reconstruction_artifact=result.get("reconstruction_artifact"),
+        extraction_identity=result.get("extraction_identity", {}),
+        source_fidelity=result.get("source_fidelity", {}),
     )
     return success_response
 

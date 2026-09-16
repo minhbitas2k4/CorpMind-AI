@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal
+from typing import Any, Literal
 from pydantic import BaseModel, Field
 from models.ocr_result import StructuredPage
 
@@ -36,7 +36,7 @@ class ReconstructionArtifactInfo(BaseModel):
 
 class OCRSuccessResponse(BaseModel):
     document_id: str
-    schema_version: str = "1.0"
+    schema_version: str = "1.1"
     status: Literal["success"] = "success"
     total_pages: int = 1
     page_average_confidence: float
@@ -46,6 +46,8 @@ class OCRSuccessResponse(BaseModel):
     pages: list[StructuredPage] = Field(default_factory=list)
     asset_processing_seconds: float = 0.0
     reconstruction_artifact: ReconstructionArtifactInfo | None = None
+    extraction_identity: dict[str, str] = Field(default_factory=dict)
+    source_fidelity: dict[str, Any] = Field(default_factory=dict)
 
 
 class OCRErrorResponse(BaseModel):

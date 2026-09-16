@@ -8,6 +8,7 @@ class OCRBlock(BaseModel):
     text: str
     confidence: float
     bbox: list  # [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
+    provenance: str = "ocr"
 
 # PP-Structure component types
 class ComponentType(str, Enum):
@@ -31,6 +32,9 @@ class LayoutComponent(BaseModel):
     table_html: Optional[str] = None 
     source_layout_type: str = "unknown"
     synthetic_region: bool = False
+    extraction_provenance: str = "ocr"
+    rows: Optional[list[dict[str, Any]]] = None
+    cells: Optional[list[dict[str, Any]]] = None
 
 # Response cho toàn trang (PP-Structure)
 class StructureResponse(BaseModel):
@@ -50,12 +54,14 @@ class StructuredLine(BaseModel):
     confidence: float
     bbox: list
     normalized_bbox: list
+    provenance: str = "ocr"
 
 
 class ComponentMetadata(BaseModel):
     source_layout_type: str
     synthetic_region: bool = False
     asset_errors: list[str] = Field(default_factory=list)
+    extraction_provenance: str = "ocr"
 
 
 class AssetMetadata(BaseModel):
@@ -84,8 +90,8 @@ class StructuredComponent(BaseModel):
     text: str
     lines: list[StructuredLine]
     metadata: ComponentMetadata
-    rows: Optional[list[Any]] = None
-    cells: Optional[list[Any]] = None
+    rows: Optional[list[dict[str, Any]]] = None
+    cells: Optional[list[dict[str, Any]]] = None
     asset: Optional[AssetMetadata] = None
     caption: Optional[FigureCaption] = None
 
@@ -103,13 +109,20 @@ class StructuredPage(BaseModel):
     render_dpi: int = 200
     coordinate_system: CoordinateSystem = Field(default_factory=CoordinateSystem)
     components: list[StructuredComponent]
+    extraction_mode: str = "ocr"
+    native_line_count: int = 0
+    accounted_line_count: int = 0
+    source_fidelity: float | None = None
+    fidelity_codes: list[str] = Field(default_factory=list)
 
 
 class StructuredDocument(BaseModel):
-    schema_version: str = "1.0"
+    schema_version: str = "1.1"
     document_id: str
     total_pages: int
     pages: list[StructuredPage]
+    extraction_identity: dict[str, str] = Field(default_factory=dict)
+    source_fidelity: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReconstructionResult(BaseModel):
@@ -118,4 +131,3 @@ class ReconstructionResult(BaseModel):
     total_pages: int
     render_seconds: float
     warnings: list[str] = Field(default_factory=list)
-

@@ -96,6 +96,10 @@ namespace CorpMindAI.Application.DTOs.Document
         public int TotalPages { get; set; }
         [JsonPropertyName("pages")]
         public List<StructuredPageDto> Pages { get; set; } = new();
+        [JsonPropertyName("extraction_identity")]
+        public Dictionary<string, string> ExtractionIdentity { get; set; } = new();
+        [JsonPropertyName("source_fidelity")]
+        public JsonElement? SourceFidelity { get; set; }
     }
 
     public class StructuredPageDto
@@ -112,6 +116,16 @@ namespace CorpMindAI.Application.DTOs.Document
         public CoordinateSystemDto CoordinateSystem { get; set; } = new();
         [JsonPropertyName("components")]
         public List<StructuredComponentDto> Components { get; set; } = new();
+        [JsonPropertyName("extraction_mode")]
+        public string ExtractionMode { get; set; } = "ocr";
+        [JsonPropertyName("native_line_count")]
+        public int NativeLineCount { get; set; }
+        [JsonPropertyName("accounted_line_count")]
+        public int AccountedLineCount { get; set; }
+        [JsonPropertyName("source_fidelity")]
+        public double? SourceFidelity { get; set; }
+        [JsonPropertyName("fidelity_codes")]
+        public List<string> FidelityCodes { get; set; } = new();
     }
 
     public class CoordinateSystemDto
@@ -170,6 +184,8 @@ namespace CorpMindAI.Application.DTOs.Document
         public List<List<double>> Bbox { get; set; } = new();
         [JsonPropertyName("normalized_bbox")]
         public List<List<double>> NormalizedBbox { get; set; } = new();
+        [JsonPropertyName("provenance")]
+        public string Provenance { get; set; } = "ocr";
     }
 
     public class ComponentMetadataDto
@@ -180,6 +196,8 @@ namespace CorpMindAI.Application.DTOs.Document
         public bool SyntheticRegion { get; set; }
         [JsonPropertyName("asset_errors")]
         public List<string> AssetErrors { get; set; } = new();
+        [JsonPropertyName("extraction_provenance")]
+        public string ExtractionProvenance { get; set; } = "ocr";
     }
 
     public class AssetMetadataDto

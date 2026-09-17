@@ -92,5 +92,7 @@ namespace CorpMindAI.Domain.Entities
         public virtual ICollection<AiKnowledgeConflict> ConflictingConflicts { get; set; } = new List<AiKnowledgeConflict>();
 
         public virtual OcrResult? OcrResult { get; set; }
+
+        public virtual ICollection<ChunkingRun> ChunkingRuns { get; set; } = new List<ChunkingRun>();
     }
 }

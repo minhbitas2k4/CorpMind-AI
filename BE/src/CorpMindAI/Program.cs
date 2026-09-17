@@ -1,4 +1,5 @@
 using CorpMindAI.Api;
+using CorpMindAI.Application.Interfaces;
 using CorpMindAI.Infrastructure.Authorization;
 using CorpMindAI.Infrastructure.Extentions;
 using CorpMindAI.Infrastructure.Services;
@@ -70,6 +71,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+recurringJobManager.AddOrUpdate<IChunkingOutboxDispatcher>(
+    "chunking-outbox-dispatcher",
+    dispatcher => dispatcher.DispatchPendingAsync(),
+    Cron.Minutely);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

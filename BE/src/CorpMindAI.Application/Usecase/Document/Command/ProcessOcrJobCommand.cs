@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using CorpMindAI.Application.DTOs.Common;
 using CorpMindAI.Application.DTOs.Document;
 using CorpMindAI.Application.Interfaces;
@@ -21,6 +23,7 @@ namespace CorpMindAI.Application.Usecase.Document.Command
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ProcessOcrJobCommandHandler> _logger;
         private readonly IUserRepository? _userRepo;
+        private readonly IChunkingOutbox _chunkingOutbox;
 
         public ProcessOcrJobCommandHandler(
             IDocumentRepository documentRepo,
@@ -28,6 +31,7 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             IOcrService ocrService,
             IUnitOfWork unitOfWork,
             ILogger<ProcessOcrJobCommandHandler> logger,
+            IChunkingOutbox chunkingOutbox,
             IUserRepository? userRepo = null)
         {
             _documentRepo = documentRepo;
@@ -35,6 +39,7 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             _ocrService = ocrService;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _chunkingOutbox = chunkingOutbox;
             _userRepo = userRepo;
         }
 
@@ -42,6 +47,7 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             ProcessOcrJobCommand command,
             CancellationToken cancellationToken)
         {
+            string? pendingChunkingPayloadHash = null;
             _logger.LogInformation(
                 "[Hangfire Job] Bắt đầu OCR cho document {DocumentId} bởi user {UserId}",
                 command.DocumentId,
@@ -165,6 +171,19 @@ namespace CorpMindAI.Application.Usecase.Document.Command
 
                 await TransferReconstructionAsync(command.DocumentId, ocrResult, entity, cancellationToken);
 
+                if (string.IsNullOrWhiteSpace(entity.StructuredDocumentJson))
+                    throw new InvalidOperationException(
+                        "OCR completed without StructuredDocumentJson; chunking cannot be scheduled.");
+
+                var ocrPayloadHash = Convert.ToHexString(SHA256.HashData(
+                    Encoding.UTF8.GetBytes(entity.StructuredDocumentJson))).ToLowerInvariant();
+                pendingChunkingPayloadHash = ocrPayloadHash;
+                await _chunkingOutbox.AddPendingAsync(
+                    command.DocumentId,
+                    ocrPayloadHash,
+                    redispatchExisting: true,
+                    cancellationToken);
+
                 // Cập nhật document status sang completed
                 await UpdateDocumentStatusAsync(document, "completed", "completed", cancellationToken);
 
@@ -179,6 +198,9 @@ namespace CorpMindAI.Application.Usecase.Document.Command
             }
             catch (Exception ex)
             {
+                if (pendingChunkingPayloadHash is not null)
+                    _chunkingOutbox.DiscardPending(command.DocumentId, pendingChunkingPayloadHash);
+
                 _logger.LogError(ex,
                     "[Hangfire Job] Lỗi khi xử lý OCR cho document {DocumentId}",
                     command.DocumentId);

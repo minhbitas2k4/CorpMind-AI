@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CorpMindAI.Application.Chunking.Models;
 using CorpMindAI.Application.Interfaces;
 using CorpMindAI.Application.Settings;
 using CorpMindAI.Application.Usecase.Document.Command;
@@ -38,9 +39,16 @@ namespace CorpMindAI.Infrastructure
             services.Configure<OcrSettings>(
                 configuration.GetSection("OcrSettings"));
 
+            var chunkingOptions = configuration.GetSection("Chunking").Get<ChunkingOptions>()
+                ?? new ChunkingOptions();
+            chunkingOptions.Validate();
+            services.AddSingleton(chunkingOptions);
+
             // Repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IDocumentRepository, DocumentRepository>();
+            services.AddScoped<IChunkRepository, ChunkRepository>();
+            services.AddScoped<IChunkingOutbox, ChunkingOutbox>();
 
             // Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -59,6 +67,12 @@ namespace CorpMindAI.Infrastructure
             services.AddScoped<PasswordMigrationService>();
 
             services.AddScoped<IOcrProcessingJob, Infrastructure.Jobs.OcrProcessingJob>();
+            services.AddScoped<IDocumentChunkingJob, Infrastructure.Jobs.DocumentChunkingJob>();
+            services.AddScoped<IChunkingOutboxDispatcher, ChunkingOutboxDispatcher>();
+            services.AddScoped<ITokenCounter, ChunkingTokenCounter>();
+            services.AddSingleton<IChunkingExecutionLock>(_ =>
+                new PostgreSqlChunkingExecutionLock(connectionString
+                    ?? throw new InvalidOperationException("DefaultConnection is required.")));
 
             // Hangfire Job Scheduler — abstraction để Application layer enqueue jobs mà không phụ thuộc Hangfire
             services.AddScoped<IJobScheduler, HangfireJobScheduler>();

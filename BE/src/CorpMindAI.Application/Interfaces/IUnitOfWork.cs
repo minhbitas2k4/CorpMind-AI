@@ -12,11 +12,13 @@ namespace CorpMindAI.Application.Interfaces
         // Quản lý các Repository
         IUserRepository UserRepo { get; }
         IDocumentRepository DocumentRepo { get; }
+        IChunkRepository ChunkRepo { get; }
 
         // Hàm quyết định việc lưu dữ liệu xuống DB
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
+        void ClearTrackedChanges();
     }
 }

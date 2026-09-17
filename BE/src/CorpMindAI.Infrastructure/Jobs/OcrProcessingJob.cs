@@ -1,4 +1,5 @@
 using CorpMindAI.Application.Usecase.Document.Command;
+using CorpMindAI.Application.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Hangfire;
@@ -43,6 +44,10 @@ namespace CorpMindAI.Infrastructure.Jobs
                     throw new InvalidOperationException(
                         $"OCR job failed for document {documentId}: {result.Message}");
                 }
+
+                _logger.LogInformation(
+                    "[Hangfire] OCR completion and its durable chunking request were committed for DocumentId {DocumentId}.",
+                    documentId);
 
                 _logger.LogInformation(
                     "[Hangfire] OCR job hoàn thành cho document {DocumentId}: " +

@@ -3,6 +3,7 @@ using System;
 using CorpMindAI.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,13 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CorpMindAI.Infrastructure.Migrations
 {
     [DbContext(typeof(CorpMindDbContext))]
-    partial class CorpMindDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909032453_AddParentChildChunking")]
+    partial class AddParentChildChunking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.28")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -343,20 +346,11 @@ namespace CorpMindAI.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<string>("NormalizationNoticesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("normalization_notices_json");
-
                     b.Property<string>("SourceContentHash")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("source_content_hash");
-
-                    b.Property<double?>("SourceCoverage")
-                        .HasColumnType("double precision")
-                        .HasColumnName("source_coverage");
 
                     b.Property<string>("SourceSchemaVersion")
                         .IsRequired()
@@ -377,11 +371,6 @@ namespace CorpMindAI.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<string>("ValidationWarningsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("validation_warnings_json");
 
                     b.HasKey("Id");
 
@@ -841,62 +830,6 @@ namespace CorpMindAI.Infrastructure.Migrations
                     b.ToTable("user_roles");
                 });
 
-            modelBuilder.Entity("CorpMindAI.Infrastructure.Data.Entities.ChunkingOutboxMessage", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(96)
-                        .HasColumnType("character varying(96)")
-                        .HasColumnName("id");
-
-                    b.Property<int>("AttemptCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("attempt_count");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime?>("DispatchedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dispatched_at");
-
-                    b.Property<int>("DocumentId")
-                        .HasColumnType("integer")
-                        .HasColumnName("document_id");
-
-                    b.Property<string>("HangfireJobId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("hangfire_job_id");
-
-                    b.Property<string>("LastError")
-                        .HasColumnType("text")
-                        .HasColumnName("last_error");
-
-                    b.Property<DateTime>("NextAttemptAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("next_attempt_at");
-
-                    b.Property<string>("OcrPayloadHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("ocr_payload_hash");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DispatchedAt", "NextAttemptAt");
-
-                    b.HasIndex("DocumentId", "OcrPayloadHash")
-                        .IsUnique();
-
-                    b.ToTable("chunking_outbox_messages");
-                });
-
             modelBuilder.Entity("CorpMindAI.Domain.Entities.ActivityLog", b =>
                 {
                     b.HasOne("CorpMindAI.Domain.Entities.User", "User")
@@ -1090,17 +1023,6 @@ namespace CorpMindAI.Infrastructure.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("CorpMindAI.Infrastructure.Data.Entities.ChunkingOutboxMessage", b =>
-                {
-                    b.HasOne("CorpMindAI.Domain.Entities.Document", "Document")
-                        .WithMany()
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("CorpMindAI.Domain.Entities.ChatSession", b =>

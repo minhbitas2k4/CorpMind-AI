@@ -5,6 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using CorpMindAI.Application.Usecase.Auth.Command;
+using CorpMindAI.Application.Chunking;
+using CorpMindAI.Application.Chunking.Children;
+using CorpMindAI.Application.Chunking.Normalization;
+using CorpMindAI.Application.Chunking.Parents;
+using CorpMindAI.Application.Chunking.Sections;
+using CorpMindAI.Application.Chunking.Validation;
+using CorpMindAI.Application.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CorpMindAI.Application
@@ -17,6 +24,13 @@ namespace CorpMindAI.Application
             {
                 cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly);
             });
+            services.AddScoped<IDocumentNormalizer, StructuredDocumentNormalizer>();
+            services.AddScoped<IHeadingDetector, HeadingDetector>();
+            services.AddScoped<ISectionBuilder, SectionBuilder>();
+            services.AddScoped<IParentChunkBuilder, ParentChunkBuilder>();
+            services.AddScoped<IChildChunkBuilder, ChildChunkBuilder>();
+            services.AddScoped<IDocumentChunkingOrchestrator, DocumentChunkingOrchestrator>();
+            services.AddScoped<IChunkingResultValidator, ChunkingResultValidator>();
             return services;
         }
     }

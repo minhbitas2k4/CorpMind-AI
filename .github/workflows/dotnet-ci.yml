@@ -1,0 +1,117 @@
+name: .NET CI
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dotnet-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEST_PROJECT: BE/src/CorpMindAI.Tests/CorpMindAI.Tests.csproj
+  SOLUTION: BE/CorpMindAI.sln
+
+jobs:
+  unit-component:
+    name: Unit and component tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore application and test dependencies
+        run: |
+          dotnet restore "$SOLUTION"
+          dotnet restore "$TEST_PROJECT"
+
+      - name: Build application and test project
+        run: |
+          dotnet build "$SOLUTION" --configuration Release --no-restore
+          dotnet build "$TEST_PROJECT" --configuration Release --no-restore
+
+      - name: Run unit and component tests
+        run: >-
+          dotnet test "$TEST_PROJECT"
+          --configuration Release
+          --no-build
+          --filter "TestType=Unit|TestType=Component"
+          --logger "trx;LogFileName=unit-component.trx"
+          --results-directory artifacts/test-results/unit-component
+
+      - name: Upload unit and component test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-unit-component-results
+          path: artifacts/test-results/unit-component
+          if-no-files-found: warn
+
+  postgresql-integration:
+    name: PostgreSQL integration tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      CORPMIND_CHUNKING_TEST_CONNECTION: Host=127.0.0.1;Port=5432;Database=postgres;Username=postgres;Password=postgres
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore application and test dependencies
+        run: |
+          dotnet restore "$SOLUTION"
+          dotnet restore "$TEST_PROJECT"
+
+      - name: Build test project
+        run: dotnet build "$TEST_PROJECT" --configuration Release --no-restore
+
+      - name: Run PostgreSQL integration tests
+        run: >-
+          dotnet test "$TEST_PROJECT"
+          --configuration Release
+          --no-build
+          --filter "TestType=Integration"
+          --logger "trx;LogFileName=postgresql-integration.trx"
+          --results-directory artifacts/test-results/postgresql-integration
+
+      - name: Upload PostgreSQL integration test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-postgresql-integration-results
+          path: artifacts/test-results/postgresql-integration
+          if-no-files-found: warn

@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorpMindAI.Domain", "src\Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorpMindAI.Infrastructure", "src\CorpMindAI.Infrastructure\CorpMindAI.Infrastructure.csproj", "{99B7E710-CDBB-4597-9258-621A03A86FC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorpMindAI.Tests", "src\CorpMindAI.Tests\CorpMindAI.Tests.csproj", "{AC966618-2F3A-4438-8689-C1B8DDFF8248}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{99B7E710-CDBB-4597-9258-621A03A86FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99B7E710-CDBB-4597-9258-621A03A86FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99B7E710-CDBB-4597-9258-621A03A86FC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC966618-2F3A-4438-8689-C1B8DDFF8248}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC966618-2F3A-4438-8689-C1B8DDFF8248}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC966618-2F3A-4438-8689-C1B8DDFF8248}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC966618-2F3A-4438-8689-C1B8DDFF8248}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 		{40DB9A59-DFF8-A428-6C12-BB0AE1DA2D4A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{19D9CC1D-1E61-B22C-DE62-69CB4964B838} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{99B7E710-CDBB-4597-9258-621A03A86FC1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{AC966618-2F3A-4438-8689-C1B8DDFF8248} = {B87BFB48-0071-447D-B9FB-3EC634186F57}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F70562A9-BCBF-401C-B657-9CF47BD7F32E}

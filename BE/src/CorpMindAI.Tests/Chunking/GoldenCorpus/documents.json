@@ -1,0 +1,195 @@
+[
+  {
+    "name": "policy-access-control",
+    "title": "Corporate Access Control Policy",
+    "document": {
+      "schema_version": "1.0", "document_id": "1001", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "width": 1200, "height": 1600, "render_dpi": 144, "components": [
+          { "component_id": "doc-1001-p1-c0000", "document_id": "1001", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "Chapter I Corporate Security", "bbox": [80,100,1100,160], "normalized_bbox": [0.07,0.06,0.92,0.10], "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1001-p1-c0001", "document_id": "1001", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.98, "text": "This policy defines mandatory controls for company systems and information.", "bbox": [80,220,1100,360], "normalized_bbox": [0.07,0.14,0.92,0.23], "metadata": { "source_layout_type": "text" } },
+          { "component_id": "doc-1001-p1-c0002", "document_id": "1001", "page_number": 1, "type": "title", "reading_order": 2, "confidence": 0.97, "text": "Section 1 Access Control", "bbox": [80,1400,1100,1460], "normalized_bbox": [0.07,0.88,0.92,0.91], "metadata": { "source_layout_type": "title" } }
+        ] },
+        { "page_number": 2, "width": 1200, "height": 1600, "render_dpi": 144, "components": [
+          { "component_id": "doc-1001-p2-c0000", "document_id": "1001", "page_number": 2, "type": "text", "reading_order": 0, "confidence": 0.98, "text": "Employees must use approved credentials. Privileged access requires quarterly review.", "bbox": [80,120,1100,300], "normalized_bbox": [0.07,0.08,0.92,0.19], "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "policy-record-retention",
+    "title": "Records Retention Policy",
+    "document": {
+      "schema_version": "1.0", "document_id": "1002", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1002-p1-c0000", "document_id": "1002", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "1. Records Management", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1002-p1-c0001", "document_id": "1002", "page_number": 1, "type": "title", "reading_order": 1, "confidence": 0.98, "text": "1.1 Retention Periods", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1002-p1-c0002", "document_id": "1002", "page_number": 1, "type": "list", "reading_order": 2, "confidence": 0.96, "text": "1. Tax records: seven years.\n2. Employment records: six years.\n3. Security logs: two years.\n4. Contracts: seven years after expiration.\n5. Audit evidence: ten years.", "metadata": { "source_layout_type": "list" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1002-p2-c0000", "document_id": "1002", "page_number": 2, "type": "title", "reading_order": 0, "confidence": 0.98, "text": "1.1.1 Legal Holds", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1002-p2-c0001", "document_id": "1002", "page_number": 2, "type": "text", "reading_order": 1, "confidence": 0.97, "text": "A legal hold suspends routine deletion until counsel provides written release.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "contract-managed-services",
+    "title": "Managed Services Agreement",
+    "document": {
+      "schema_version": "1.0", "document_id": "1003", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1003-p1-c0000", "document_id": "1003", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "Article 1 Services", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1003-p1-c0001", "document_id": "1003", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.98, "text": "Provider will deliver monitoring, incident response, and monthly service reports.", "metadata": { "source_layout_type": "text" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1003-p2-c0000", "document_id": "1003", "page_number": 2, "type": "title", "reading_order": 0, "confidence": 0.98, "text": "Article 2 Fees", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1003-p2-c0001", "document_id": "1003", "page_number": 2, "type": "text", "reading_order": 1, "confidence": 0.97, "text": "Customer shall pay each undisputed invoice within thirty calendar days.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "contract-mutual-nda",
+    "title": "Mutual Nondisclosure Agreement",
+    "document": {
+      "schema_version": "1.0", "document_id": "1004", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1004-p1-c0000", "document_id": "1004", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "Part I Confidential Information", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1004-p1-c0001", "document_id": "1004", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.98, "text": "Confidential Information includes nonpublic technical, commercial, and financial information disclosed by either party.", "metadata": { "source_layout_type": "text" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1004-p2-c0000", "document_id": "1004", "page_number": 2, "type": "title", "reading_order": 0, "confidence": 0.98, "text": "Part II Exclusions", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1004-p2-c0001", "document_id": "1004", "page_number": 2, "type": "text", "reading_order": 1, "confidence": 0.97, "text": "Information independently developed without use of Confidential Information is excluded.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "tables-financial-summary",
+    "title": "Quarterly Financial Summary",
+    "document": {
+      "schema_version": "1.0", "document_id": "1005", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1005-p1-c0000", "document_id": "1005", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "Section 1 Revenue", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1005-p1-c0001", "document_id": "1005", "page_number": 1, "type": "table", "reading_order": 1, "confidence": 0.94, "text": "Region | Q1 | Q2\nNorth | 125000 | 131000\nSouth | 98000 | 104000\nWest | 113000 | 119000", "metadata": { "source_layout_type": "table" } },
+          { "component_id": "doc-1005-p1-c0002", "document_id": "1005", "page_number": 1, "type": "table", "reading_order": 2, "confidence": 0.93, "text": "Product | Units | Margin\nAlpha | 420 | 31%\nBeta | 315 | 27%", "metadata": { "source_layout_type": "table" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1005-p2-c0000", "document_id": "1005", "page_number": 2, "type": "text", "reading_order": 0, "confidence": 0.97, "text": "Revenue increased because renewal rates and enterprise subscriptions improved.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "tables-inventory-register",
+    "title": "Inventory Register",
+    "document": {
+      "schema_version": "1.0", "document_id": "1006", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1006-p1-c0000", "document_id": "1006", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.98, "text": "Appendix A Hardware", "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1006-p1-c0001", "document_id": "1006", "page_number": 1, "type": "table", "reading_order": 1, "confidence": 0.91, "text": "Asset | Owner | Status\nLT-001 | Finance | Active\nLT-002 | Legal | Repair", "metadata": { "source_layout_type": "table" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1006-p2-c0000", "document_id": "1006", "page_number": 2, "type": "table", "reading_order": 0, "confidence": 0.90, "text": "Asset | Location | Review\nSW-014 | London | 2026-10-01\nSW-019 | Bangkok | 2026-11-15", "metadata": { "source_layout_type": "table" } },
+          { "component_id": "doc-1006-p2-c0001", "document_id": "1006", "page_number": 2, "type": "text", "reading_order": 1, "confidence": 0.96, "text": "Custodians must report missing assets immediately.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "scan-low-quality-handbook",
+    "title": "Legacy Employee Handbook",
+    "document": {
+      "schema_version": "1.0", "document_id": "1007", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1007-p1-c0000", "document_id": "1007", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.62, "text": "Chapter II Workplace Conduct", "metadata": { "source_layout_type": "title", "synthetic_region": true } },
+          { "component_id": "doc-1007-p1-c0001", "document_id": "1007", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.51, "text": "Employees must act profes-\nsionally and protect company property.", "metadata": { "source_layout_type": "text", "synthetic_region": true } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1007-p2-c0000", "document_id": "1007", "page_number": 2, "type": "text", "reading_order": 0, "confidence": 0.47, "text": "Questions should be directed to Human Resources or the employee's manager.", "metadata": { "source_layout_type": "text", "synthetic_region": true } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "scan-low-quality-safety",
+    "title": "Scanned Safety Procedure",
+    "document": {
+      "schema_version": "1.0", "document_id": "1008", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1008-p1-c0000", "document_id": "1008", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.58, "text": "Section 1 Emergency Response", "metadata": { "source_layout_type": "title", "synthetic_region": true } },
+          { "component_id": "doc-1008-p1-c0001", "document_id": "1008", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.44, "text": "Activate the nearest alarm and leave through the marked exit.", "metadata": { "source_layout_type": "text", "synthetic_region": true } },
+          { "component_id": "doc-1008-p1-c0002", "document_id": "1008", "page_number": 1, "type": "text", "reading_order": 2, "confidence": 0.20, "text": "", "metadata": { "source_layout_type": "text", "synthetic_region": true } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1008-p2-c0000", "document_id": "1008", "page_number": 2, "type": "text", "reading_order": 0, "confidence": 0.49, "text": "Report to the assembly point and wait for further instructions.", "metadata": { "source_layout_type": "text", "synthetic_region": true } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "two-column-benefits-handbook",
+    "title": "Benefits Handbook",
+    "document": {
+      "schema_version": "1.0", "document_id": "1009", "total_pages": 1,
+      "pages": [
+        { "page_number": 1, "width": 1600, "height": 2200, "components": [
+          { "component_id": "doc-1009-p1-c0002", "document_id": "1009", "page_number": 1, "type": "text", "reading_order": 2, "confidence": 0.97, "text": "Dental enrollment follows the same annual election period.", "bbox": [850,320,1500,650], "normalized_bbox": [0.53,0.15,0.94,0.30], "metadata": { "source_layout_type": "text" } },
+          { "component_id": "doc-1009-p1-c0000", "document_id": "1009", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "Section 1 Health Benefits", "bbox": [80,100,1500,180], "normalized_bbox": [0.05,0.05,0.94,0.08], "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1009-p1-c0001", "document_id": "1009", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.98, "text": "Medical coverage begins on the first day of eligible employment.", "bbox": [80,320,730,650], "normalized_bbox": [0.05,0.15,0.46,0.30], "metadata": { "source_layout_type": "text" } },
+          { "component_id": "doc-1009-p1-c0003", "document_id": "1009", "page_number": 1, "type": "text", "reading_order": 3, "confidence": 0.97, "text": "Dependents require supporting documentation before coverage is confirmed.", "bbox": [80,720,730,980], "normalized_bbox": [0.05,0.33,0.46,0.45], "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "two-column-risk-report",
+    "title": "Enterprise Risk Report",
+    "document": {
+      "schema_version": "1.0", "document_id": "1010", "total_pages": 1,
+      "pages": [
+        { "page_number": 1, "width": 1600, "height": 2200, "components": [
+          { "component_id": "doc-1010-p1-c0003", "document_id": "1010", "page_number": 1, "type": "text", "reading_order": 3, "confidence": 0.96, "text": "Residual risk remains within the approved tolerance.", "bbox": [850,700,1500,980], "normalized_bbox": [0.53,0.32,0.94,0.45], "metadata": { "source_layout_type": "text" } },
+          { "component_id": "doc-1010-p1-c0001", "document_id": "1010", "page_number": 1, "type": "text", "reading_order": 1, "confidence": 0.97, "text": "Operational disruption is mitigated by tested recovery procedures.", "bbox": [80,300,730,620], "normalized_bbox": [0.05,0.14,0.46,0.28], "metadata": { "source_layout_type": "text" } },
+          { "component_id": "doc-1010-p1-c0000", "document_id": "1010", "page_number": 1, "type": "title", "reading_order": 0, "confidence": 0.99, "text": "1. Key Risks", "bbox": [80,100,1500,180], "normalized_bbox": [0.05,0.05,0.94,0.08], "metadata": { "source_layout_type": "title" } },
+          { "component_id": "doc-1010-p1-c0002", "document_id": "1010", "page_number": 1, "type": "text", "reading_order": 2, "confidence": 0.97, "text": "Supplier concentration is monitored through quarterly assessments.", "bbox": [850,300,1500,620], "normalized_bbox": [0.53,0.14,0.94,0.28], "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "unsectioned-executive-memo",
+    "title": "Executive Operations Memo",
+    "document": {
+      "schema_version": "1.0", "document_id": "1011", "total_pages": 2,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1011-p1-c0000", "document_id": "1011", "page_number": 1, "type": "text", "reading_order": 0, "confidence": 0.98, "text": "The operations team will consolidate weekly reporting beginning next month.", "metadata": { "source_layout_type": "text" } }
+        ] },
+        { "page_number": 2, "components": [
+          { "component_id": "doc-1011-p2-c0000", "document_id": "1011", "page_number": 2, "type": "text", "reading_order": 0, "confidence": 0.98, "text": "Regional leaders remain accountable for review and timely escalation.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  },
+  {
+    "name": "unsectioned-long-notice",
+    "title": "Customer Service Notice",
+    "document": {
+      "schema_version": "1.0", "document_id": "1012", "total_pages": 1,
+      "pages": [
+        { "page_number": 1, "components": [
+          { "component_id": "doc-1012-p1-c0000", "document_id": "1012", "page_number": 1, "type": "text", "reading_order": 0, "confidence": 0.97, "text": "Customers who submit a complete service request through the approved portal will receive an acknowledgement, a reference number, an initial assessment, a proposed resolution date, regular progress updates, and a final written response that explains the action taken by the responsible support team and identifies any additional information required to close the request securely and accurately.", "metadata": { "source_layout_type": "text" } }
+        ] }
+      ]
+    }
+  }
+]

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.61" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CorpMindAI.Application\CorpMindAI.Application.csproj" />
+    <ProjectReference Include="..\CorpMindAI.Domain\CorpMindAI.Domain.csproj" />
+    <ProjectReference Include="..\CorpMindAI.Infrastructure\CorpMindAI.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Chunking\GoldenCorpus\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Chunking\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\CorpMindAI.OCR\tests\fixtures\document-28\structured-ocr-v1.json"
+             Link="Chunking\Fixtures\Document28\structured-ocr-v1.json"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

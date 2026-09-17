@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "document_id": "27",
+  "total_pages": 4,
+  "pages": [
+    { "page_number": 1, "width": 1200, "height": 1600, "render_dpi": 150, "components": [] },
+    { "page_number": 2, "width": 1200, "height": 1600, "render_dpi": 150, "components": [] },
+    { "page_number": 3, "width": 1200, "height": 1600, "render_dpi": 150, "components": [] },
+    {
+      "page_number": 4,
+      "width": 1200,
+      "height": 1600,
+      "render_dpi": 150,
+      "components": [
+        {
+          "component_id": "doc-27-p4-c0000",
+          "document_id": "27",
+          "page_number": 4,
+          "type": "title",
+          "reading_order": 0,
+          "confidence": 0.98,
+          "text": "5. Incident Response Checklist",
+          "metadata": { "source_layout_type": "title" }
+        },
+        {
+          "component_id": "doc-27-p4-c0004",
+          "document_id": "27",
+          "page_number": 4,
+          "type": "list",
+          "reading_order": 1,
+          "confidence": 0.91,
+          "text": "1. Record the detection time, affected systems, and initial evidence in the incident register. Assign a responsible incident coordinator and preserve all relevant logs, messages, and screenshots for later review.\n2. Contain the incident by applying the approved isolation procedure, documenting every command and change, and confirming that critical business services remain available.\n3. Notify the security, legal, privacy, and business stakeholders according to the escalation matrix, including a concise impact statement and the next scheduled update.\n4. Investigate the likely cause, compare observed indicators with known attack patterns, and record hypotheses together with the evidence that supports or disproves each one.\n5. Eradicate malicious artifacts, rotate credentials where required, verify endpoint status, and obtain an independent review before returning systems to normal operation.\n6. Recover services in a controlled order, monitor for recurring indicators, communicate customer impact accurately, and keep a timeline of all recovery decisions.\n7. Complete the post-incident review, identify preventive actions with named owners and due dates, and retain the approved report with the incident evidence.\n8. Verify that every action has been closed or accepted as a documented risk, then archive the checklist and supporting records under the applicable retention policy.",
+          "metadata": { "source_layout_type": "list" }
+        },
+        {
+          "component_id": "doc-27-p4-c0005",
+          "document_id": "27",
+          "page_number": 4,
+          "type": "text",
+          "reading_order": 2,
+          "confidence": 0.95,
+          "text": "The checklist is reviewed after every incident and remains part of the operational record.",
+          "metadata": { "source_layout_type": "text" }
+        }
+      ]
+    }
+  ]
+}

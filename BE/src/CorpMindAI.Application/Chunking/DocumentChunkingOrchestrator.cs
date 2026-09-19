@@ -23,6 +23,7 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
     private readonly ILogger<DocumentChunkingOrchestrator> _logger;
     private readonly IChunkingResultValidator _validator;
     private readonly IChunkingExecutionLock _executionLock;
+    private readonly IEmbeddingIndexOutbox? _embeddingIndexOutbox;
     private readonly ChunkingOptions _options;
 
     public DocumentChunkingOrchestrator(
@@ -38,6 +39,37 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
         IChunkingResultValidator validator,
         IChunkingExecutionLock executionLock,
         ChunkingOptions options)
+        : this(
+            documents,
+            unitOfWork,
+            normalizer,
+            headingDetector,
+            sectionBuilder,
+            parentBuilder,
+            childBuilder,
+            tokenCounter,
+            logger,
+            validator,
+            executionLock,
+            options,
+            null)
+    {
+    }
+
+    public DocumentChunkingOrchestrator(
+        IDocumentRepository documents,
+        IUnitOfWork unitOfWork,
+        IDocumentNormalizer normalizer,
+        IHeadingDetector headingDetector,
+        ISectionBuilder sectionBuilder,
+        IParentChunkBuilder parentBuilder,
+        IChildChunkBuilder childBuilder,
+        ITokenCounter tokenCounter,
+        ILogger<DocumentChunkingOrchestrator> logger,
+        IChunkingResultValidator validator,
+        IChunkingExecutionLock executionLock,
+        ChunkingOptions options,
+        IEmbeddingIndexOutbox? embeddingIndexOutbox)
     {
         _documents = documents;
         _unitOfWork = unitOfWork;
@@ -50,6 +82,7 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
         _logger = logger;
         _validator = validator;
         _executionLock = executionLock;
+        _embeddingIndexOutbox = embeddingIndexOutbox;
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _options.Validate();
     }
@@ -107,6 +140,7 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
 
                 reactivatingCompletedRun = true;
                 await ActivateCompletedRunAsync(run, documentId, cancellationToken);
+                await QueueEmbeddingIndexAsync(documentId, run.Id, cancellationToken, reindexCompleted: true);
                 reactivatingCompletedRun = false;
                 _logger.LogInformation(
                     "Reactivated completed ChunkingRunId {ChunkingRunId} for DocumentId {DocumentId}.",
@@ -245,6 +279,7 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
             await _unitOfWork.ChunkRepo.UpdateAsync(run, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitTransactionAsync();
+            await QueueEmbeddingIndexAsync(documentId, run.Id, cancellationToken);
             _logger.LogInformation("Chunking completed for DocumentId {DocumentId}, ChunkingRunId {ChunkingRunId}, version {ChunkerVersion}.", documentId, run.Id, options.ChunkerVersion);
         }
         catch (OperationCanceledException exception)
@@ -379,6 +414,19 @@ public sealed class DocumentChunkingOrchestrator : IDocumentChunkingOrchestrator
         await _unitOfWork.ChunkRepo.UpdateAsync(run, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _unitOfWork.CommitTransactionAsync();
+    }
+
+    private async Task QueueEmbeddingIndexAsync(
+        int documentId,
+        string chunkingRunId,
+        CancellationToken cancellationToken,
+        bool reindexCompleted = false)
+    {
+        if (_embeddingIndexOutbox is null)
+            return;
+
+        await _embeddingIndexOutbox.AddPendingAsync(documentId, chunkingRunId, reindexCompleted, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private sealed record RunIdentity(

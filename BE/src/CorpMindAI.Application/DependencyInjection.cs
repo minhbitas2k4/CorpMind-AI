@@ -12,6 +12,7 @@ using CorpMindAI.Application.Chunking.Parents;
 using CorpMindAI.Application.Chunking.Sections;
 using CorpMindAI.Application.Chunking.Validation;
 using CorpMindAI.Application.Interfaces;
+using CorpMindAI.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CorpMindAI.Application
@@ -31,6 +32,7 @@ namespace CorpMindAI.Application
             services.AddScoped<IChildChunkBuilder, ChildChunkBuilder>();
             services.AddScoped<IDocumentChunkingOrchestrator, DocumentChunkingOrchestrator>();
             services.AddScoped<IChunkingResultValidator, ChunkingResultValidator>();
+            services.AddScoped<IEmbeddingIndexingService, EmbeddingIndexingService>();
             return services;
         }
     }

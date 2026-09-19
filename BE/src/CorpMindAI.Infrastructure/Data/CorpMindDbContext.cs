@@ -34,6 +34,7 @@ namespace CorpMindAI.Infrastructure.Data
         public DbSet<ParentChunk> ParentChunks { get; set; }
         public DbSet<ChildChunk> ChildChunks { get; set; }
         public DbSet<ChunkingOutboxMessage> ChunkingOutboxMessages { get; set; }
+        public DbSet<EmbeddingIndexOutboxMessage> EmbeddingIndexOutboxMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -83,6 +84,7 @@ namespace CorpMindAI.Infrastructure.Data
 
             ConfigureChunking(modelBuilder);
             ConfigureChunkingOutbox(modelBuilder);
+            ConfigureEmbeddingIndexOutbox(modelBuilder);
         }
 
         private static void ConfigureChunkingOutbox(ModelBuilder modelBuilder)
@@ -90,6 +92,17 @@ namespace CorpMindAI.Infrastructure.Data
             var message = modelBuilder.Entity<ChunkingOutboxMessage>();
             message.HasIndex(item => new { item.DocumentId, item.OcrPayloadHash }).IsUnique();
             message.HasIndex(item => new { item.DispatchedAt, item.NextAttemptAt });
+            message.HasOne(item => item.Document)
+                .WithMany()
+                .HasForeignKey(item => item.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        private static void ConfigureEmbeddingIndexOutbox(ModelBuilder modelBuilder)
+        {
+            var message = modelBuilder.Entity<EmbeddingIndexOutboxMessage>();
+            message.HasIndex(item => new { item.DocumentId, item.ChunkingRunId }).IsUnique();
+            message.HasIndex(item => new { item.CompletedAt, item.DispatchedAt, item.NextAttemptAt });
             message.HasOne(item => item.Document)
                 .WithMany()
                 .HasForeignKey(item => item.DocumentId)

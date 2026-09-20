@@ -16,6 +16,7 @@ using CorpMindAI.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace CorpMindAI.Infrastructure
 {
@@ -24,6 +25,8 @@ namespace CorpMindAI.Infrastructure
         public static IServiceCollection AddInfrastructureDI(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var openAiSettings = configuration.GetSection("OpenAI:Embeddings").Get<OpenAiEmbeddingSettings>()
+                ?? new OpenAiEmbeddingSettings();
 
             services.AddDbContext<CorpMindDbContext>(options =>
                 options.UseNpgsql(connectionString, b =>
@@ -39,16 +42,65 @@ namespace CorpMindAI.Infrastructure
             services.Configure<OcrSettings>(
                 configuration.GetSection("OcrSettings"));
 
+            services.AddOptions<OpenAiEmbeddingSettings>()
+                .Bind(configuration.GetSection("OpenAI:Embeddings"))
+                .Validate(settings =>
+                {
+                    settings.Validate();
+                    return true;
+                }, "OpenAI embedding settings are invalid.")
+                .ValidateOnStart();
+            services.AddOptions<QdrantSettings>()
+                .Bind(configuration.GetSection("Qdrant"))
+                .Validate(settings =>
+                {
+                    settings.Validate();
+                    return true;
+                }, "Qdrant settings are invalid.")
+                .ValidateOnStart();
+
             var chunkingOptions = configuration.GetSection("Chunking").Get<ChunkingOptions>()
                 ?? new ChunkingOptions();
             chunkingOptions.Validate();
             services.AddSingleton(chunkingOptions);
+            var embeddingIndexingOptions = configuration.GetSection("EmbeddingIndexing").Get<EmbeddingIndexingOptions>()
+                ?? new EmbeddingIndexingOptions();
+            embeddingIndexingOptions.Validate();
+            services.AddSingleton(embeddingIndexingOptions);
+            var semanticSearchOptions = configuration.GetSection("SemanticSearch").Get<SemanticSearchOptions>()
+                ?? new SemanticSearchOptions();
+            semanticSearchOptions.Validate();
+            services.AddSingleton(semanticSearchOptions);
+            var ragOptions = configuration.GetSection("Rag").Get<RagOptions>()
+                ?? new RagOptions();
+            ragOptions.Validate();
+            services.AddSingleton(ragOptions);
+            var translationSection = configuration.GetSection("OpenAI:Translation");
+            var translationSettings = translationSection.Get<OpenAiQueryTranslationSettings>()
+                ?? new OpenAiQueryTranslationSettings();
+            if (string.IsNullOrWhiteSpace(translationSection["Endpoint"]))
+                translationSettings.Endpoint = openAiSettings.Endpoint;
+            if (string.IsNullOrWhiteSpace(translationSection["ApiKey"]))
+                translationSettings.ApiKey = openAiSettings.ApiKey;
+            translationSettings.Validate();
+            services.AddSingleton(Options.Create(translationSettings));
+            var answerSection = configuration.GetSection("OpenAI:Answer");
+            var answerSettings = answerSection.Get<OpenAiAnswerSettings>()
+                ?? new OpenAiAnswerSettings();
+            if (string.IsNullOrWhiteSpace(answerSettings.Endpoint))
+                answerSettings.Endpoint = openAiSettings.Endpoint;
+            if (string.IsNullOrWhiteSpace(answerSettings.ApiKey))
+                answerSettings.ApiKey = openAiSettings.ApiKey;
+            answerSettings.Validate();
+            services.AddSingleton(Options.Create(answerSettings));
 
             // Repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IDocumentRepository, DocumentRepository>();
             services.AddScoped<IChunkRepository, ChunkRepository>();
             services.AddScoped<IChunkingOutbox, ChunkingOutbox>();
+            services.AddScoped<IEmbeddingIndexOutbox, EmbeddingIndexOutbox>();
+            services.AddScoped<IEmbeddingIndexSource, EmbeddingIndexSource>();
 
             // Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -69,6 +121,8 @@ namespace CorpMindAI.Infrastructure
             services.AddScoped<IOcrProcessingJob, Infrastructure.Jobs.OcrProcessingJob>();
             services.AddScoped<IDocumentChunkingJob, Infrastructure.Jobs.DocumentChunkingJob>();
             services.AddScoped<IChunkingOutboxDispatcher, ChunkingOutboxDispatcher>();
+            services.AddScoped<IEmbeddingIndexOutboxDispatcher, EmbeddingIndexOutboxDispatcher>();
+            services.AddScoped<IEmbeddingIndexingJob, EmbeddingIndexingJob>();
             services.AddScoped<ITokenCounter, ChunkingTokenCounter>();
             services.AddSingleton<IChunkingExecutionLock>(_ =>
                 new PostgreSqlChunkingExecutionLock(connectionString
@@ -76,6 +130,30 @@ namespace CorpMindAI.Infrastructure
 
             // Hangfire Job Scheduler — abstraction để Application layer enqueue jobs mà không phụ thuộc Hangfire
             services.AddScoped<IJobScheduler, HangfireJobScheduler>();
+
+            services.AddHttpClient<IEmbeddingGenerator, OpenAiEmbeddingGenerator>(client =>
+            {
+                client.BaseAddress = new Uri(openAiSettings.Endpoint.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(openAiSettings.TimeoutSeconds);
+            });
+            services.AddHttpClient<IQueryTranslator, OpenAiQueryTranslator>(client =>
+            {
+                client.BaseAddress = new Uri(translationSettings.Endpoint.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(translationSettings.TimeoutSeconds);
+            });
+            services.AddHttpClient<IAnswerGenerator, OpenAiAnswerGenerator>(client =>
+            {
+                client.BaseAddress = new Uri(answerSettings.Endpoint.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(answerSettings.TimeoutSeconds);
+            });
+
+            var qdrantSettings = configuration.GetSection("Qdrant").Get<QdrantSettings>()
+                ?? new QdrantSettings();
+            services.AddHttpClient<IVectorStore, QdrantVectorStore>(client =>
+            {
+                client.BaseAddress = new Uri(qdrantSettings.Endpoint.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(qdrantSettings.TimeoutSeconds);
+            });
 
             return services;
         }

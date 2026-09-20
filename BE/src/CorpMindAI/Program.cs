@@ -77,6 +77,10 @@ recurringJobManager.AddOrUpdate<IChunkingOutboxDispatcher>(
     "chunking-outbox-dispatcher",
     dispatcher => dispatcher.DispatchPendingAsync(),
     Cron.Minutely);
+recurringJobManager.AddOrUpdate<IEmbeddingIndexOutboxDispatcher>(
+    "embedding-index-outbox-dispatcher",
+    dispatcher => dispatcher.DispatchPendingAsync(),
+    Cron.Minutely);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
